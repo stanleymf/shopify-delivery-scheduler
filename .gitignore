@@ -110,4 +110,7 @@ Thumbs.db
 *.bak
 
 # Local development
-.local/ 
+.local/
+
+# Separate projects (not part of delivery scheduler)
+apps/shopify-tag-manager/ 
