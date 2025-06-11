@@ -5,17 +5,20 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
 dotenv.config();
 
-// ES modules equivalent of __dirname - works with Vite
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Use process.cwd() for file paths - works with Vite and ES modules
+const DATA_DIR = path.join(process.cwd(), 'data');
+const TEXT_CUSTOMISATIONS_PATH = path.join(DATA_DIR, 'textCustomisations.json');
+const LOCATIONS_PATH = path.join(DATA_DIR, 'locations.json');
 
-// File paths for data storage
-const TEXT_CUSTOMISATIONS_PATH = path.join(__dirname, 'textCustomisations.json');
-const LOCATIONS_PATH = path.join(__dirname, 'locations.json');
+// Ensure data directory exists
+try {
+  fs.mkdir(DATA_DIR, { recursive: true });
+} catch (error) {
+  console.log('Data directory already exists or cannot be created');
+}
 
 // Type definitions
 type ApiResponse<T = any> = {
