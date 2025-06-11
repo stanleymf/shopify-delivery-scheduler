@@ -26,7 +26,7 @@ let widgetInstance: any = null;
 
 // Initialize the widget
 export function initDeliveryScheduler(
-  containerId: string,
+  containerId: string = 'delivery-scheduler-widget',
   config: WidgetConfig,
   onEvent?: (event: any) => void
 ) {
@@ -67,6 +67,11 @@ export function initDeliveryScheduler(
   };
 }
 
+// Shopify integration init function
+export function init(config: WidgetConfig) {
+  return initDeliveryScheduler('delivery-scheduler-widget', config);
+}
+
 // Auto-initialize if data attributes are present
 document.addEventListener('DOMContentLoaded', () => {
   const script = document.currentScript;
@@ -91,7 +96,8 @@ export { DeliveryScheduler };
 // Global exports for IIFE build
 if (typeof window !== 'undefined') {
   (window as any).DeliveryScheduler = {
-    init: initDeliveryScheduler,
+    init: init,
+    initDeliveryScheduler: initDeliveryScheduler,
     DeliveryScheduler: DeliveryScheduler
   };
 } 
