@@ -98,6 +98,47 @@ type LocationUpdateRequest = {
   isActive?: boolean;
 };
 
+// Shopify integration types
+type ShopifyOrder = {
+  id: number;
+  order_number: number;
+  customer: {
+    id: number;
+    email: string;
+    first_name: string;
+    last_name: string;
+  };
+  line_items: Array<{
+    id: number;
+    product_id: number;
+    variant_id: number;
+    quantity: number;
+    title: string;
+  }>;
+  shipping_address?: {
+    address1: string;
+    address2?: string;
+    city: string;
+    province: string;
+    country: string;
+    zip: string;
+  };
+  note_attributes?: Array<{
+    name: string;
+    value: string;
+  }>;
+  tags: string;
+  created_at: string;
+};
+
+type ShopifyDeliveryData = {
+  deliveryType: 'express' | 'standard' | 'collection';
+  deliveryDate: string;
+  timeslot: string;
+  collectionLocation?: number;
+  postalCode: string;
+};
+
 const app = express();
 
 // Middleware
@@ -599,6 +640,109 @@ app.get('/express-timeslots', async (req, res) => {
     res.json({ success: true, data: { expressTimeslots } });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to load express timeslots.' });
+  }
+});
+
+// Shopify integration endpoints
+
+// POST /shopify/save-delivery-data
+app.post('/shopify/save-delivery-data', async (req, res) => {
+  try {
+    const { orderId, deliveryData, shopDomain }: {
+      orderId: number;
+      deliveryData: ShopifyDeliveryData;
+      shopDomain: string;
+    } = req.body;
+
+    // Validate required fields
+    if (!orderId || !deliveryData || !shopDomain) {
+      return res.status(400).json({
+        success: false,
+        error: 'Order ID, delivery data, and shop domain are required.'
+      });
+    }
+
+    // In a real implementation, you would:
+    // 1. Verify the Shopify webhook/request
+    // 2. Update the order with delivery information
+    // 3. Store delivery data in your database
+    // 4. Send confirmation to Shopify
+
+    // For now, we'll just return success
+    // You can implement the actual Shopify API calls here
+    
+    console.log(`Saving delivery data for order ${orderId} in shop ${shopDomain}:`, deliveryData);
+
+    res.json({
+      success: true,
+      data: {
+        orderId,
+        deliveryData,
+        shopDomain,
+        savedAt: new Date().toISOString()
+      }
+    });
+  } catch (err) {
+    console.error('Error saving delivery data:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save delivery data.'
+    });
+  }
+});
+
+// GET /shopify/orders/:orderId/delivery-data
+app.get('/shopify/orders/:orderId/delivery-data', async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.orderId);
+    const { shopDomain } = req.query;
+
+    if (!shopDomain) {
+      return res.status(400).json({
+        success: false,
+        error: 'Shop domain is required.'
+      });
+    }
+
+    // In a real implementation, you would fetch this from your database
+    // For now, return mock data
+    const mockDeliveryData: ShopifyDeliveryData = {
+      deliveryType: 'standard',
+      deliveryDate: '2024-06-15',
+      timeslot: '14:00-16:00',
+      postalCode: '123456'
+    };
+
+    res.json({
+      success: true,
+      data: mockDeliveryData
+    });
+  } catch (err) {
+    console.error('Error fetching delivery data:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch delivery data.'
+    });
+  }
+});
+
+// POST /shopify/webhook/orders/create
+app.post('/shopify/webhook/orders/create', async (req, res) => {
+  try {
+    const order: ShopifyOrder = req.body;
+    
+    console.log('Received order creation webhook:', order.order_number);
+
+    // In a real implementation, you would:
+    // 1. Verify the webhook signature
+    // 2. Process the order
+    // 3. Store order data
+    // 4. Send notifications if needed
+
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('Error processing order webhook:', err);
+    res.status(500).json({ success: false });
   }
 });
 

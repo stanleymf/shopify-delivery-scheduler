@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopify Delivery Scheduler - Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .widget-container {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 200px;
+            background: #f9f9f9;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Shopify Delivery Scheduler - Integration Test</h1>
+        
+        <div class="test-section">
+            <h2>📋 Test Configuration</h2>
+            <p><strong>API URL:</strong> <span id="api-url">Loading...</span></p>
+            <p><strong>Shop Domain:</strong> <span id="shop-domain">Loading...</span></p>
+            <p><strong>Widget Status:</strong> <span id="widget-status">Not loaded</span></p>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 API Health Check</h2>
+            <button onclick="testApiHealth()">Test API Health</button>
+            <div id="api-health-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📍 Test Locations Endpoint</h2>
+            <button onclick="testLocations()">Test Locations API</button>
+            <div id="locations-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🛒 Test Shopify Integration</h2>
+            <button onclick="testShopifySave()">Test Save Delivery Data</button>
+            <div id="shopify-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Widget Test</h2>
+            <div id="delivery-scheduler-widget" class="widget-container">
+                <p class="info">Widget will be loaded here...</p>
+            </div>
+            <button onclick="loadWidget()">Load Widget</button>
+            <button onclick="destroyWidget()">Destroy Widget</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Event Log</h2>
+            <div id="event-log" style="max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 4px;">
+                <p class="info">Events will appear here...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Update these with your actual URLs
+        const config = {
+            apiUrl: 'http://localhost:3001', // Update with your Railway API URL
+            shopDomain: 'test-shop.myshopify.com', // Update with your shop domain
+            widgetUrl: 'https://your-customer-widget-url.netlify.app/widget.js' // Update with your widget URL
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('api-url').textContent = config.apiUrl;
+            document.getElementById('shop-domain').textContent = config.shopDomain;
+            
+            // Load widget script
+            const script = document.createElement('script');
+            script.src = config.widgetUrl;
+            script.async = true;
+            script.onload = function() {
+                document.getElementById('widget-status').textContent = 'Loaded';
+                document.getElementById('widget-status').className = 'success';
+                logEvent('Widget script loaded successfully');
+            };
+            script.onerror = function() {
+                document.getElementById('widget-status').textContent = 'Failed to load';
+                document.getElementById('widget-status').className = 'error';
+                logEvent('Failed to load widget script', 'error');
+            };
+            document.head.appendChild(script);
+        });
+
+        function logEvent(message, type = 'info') {
+            const log = document.getElementById('event-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const eventDiv = document.createElement('div');
+            eventDiv.innerHTML = `<span class="${type}">[${timestamp}] ${message}</span>`;
+            log.appendChild(eventDiv);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function testApiHealth() {
+            const resultDiv = document.getElementById('api-health-result');
+            resultDiv.innerHTML = '<p class="info">Testing...</p>';
+            
+            try {
+                const response = await fetch(`${config.apiUrl}/health`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `<p class="success">✅ API is healthy!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    logEvent('API health check passed');
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ API health check failed</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    logEvent('API health check failed', 'error');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ API connection failed: ${error.message}</p>`;
+                logEvent(`API connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLocations() {
+            const resultDiv = document.getElementById('locations-result');
+            resultDiv.innerHTML = '<p class="info">Testing...</p>';
+            
+            try {
+                const response = await fetch(`${config.apiUrl}/locations`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `<p class="success">✅ Locations loaded!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    logEvent(`Locations loaded: ${data.data.locations.length} locations`);
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ Failed to load locations</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    logEvent('Failed to load locations', 'error');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Locations API failed: ${error.message}</p>`;
+                logEvent(`Locations API failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testShopifySave() {
+            const resultDiv = document.getElementById('shopify-result');
+            resultDiv.innerHTML = '<p class="info">Testing...</p>';
+            
+            try {
+                const response = await fetch(`${config.apiUrl}/shopify/save-delivery-data`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        orderId: 123,
+                        deliveryData: {
+                            deliveryType: 'standard',
+                            deliveryDate: '2024-06-15',
+                            timeslot: '14:00-16:00',
+                            postalCode: '123456'
+                        },
+                        shopDomain: config.shopDomain
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `<p class="success">✅ Delivery data saved!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    logEvent('Delivery data saved successfully');
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ Failed to save delivery data</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    logEvent('Failed to save delivery data', 'error');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Shopify API failed: ${error.message}</p>`;
+                logEvent(`Shopify API failed: ${error.message}`, 'error');
+            }
+        }
+
+        function loadWidget() {
+            if (window.DeliveryScheduler) {
+                const widgetConfig = {
+                    apiUrl: config.apiUrl,
+                    shopDomain: config.shopDomain,
+                    theme: 'light',
+                    language: 'en',
+                    currency: 'SGD',
+                    timezone: 'Asia/Singapore',
+                    showProductAvailability: true,
+                    allowExpressDelivery: true,
+                    maxFutureDays: 30,
+                    enablePostalCodeValidation: true,
+                    enablePostalCodeAutoComplete: true,
+                    postalCodeAutoCompleteDelay: 300,
+                    showPostalCodeSuggestions: true,
+                    maxPostalCodeSuggestions: 5
+                };
+
+                window.DeliveryScheduler.init('delivery-scheduler-widget', widgetConfig, function(event) {
+                    logEvent(`Widget event: ${event.type}`, 'info');
+                    console.log('Widget event:', event);
+                });
+                
+                logEvent('Widget loaded successfully');
+            } else {
+                logEvent('Widget not available - check script loading', 'error');
+            }
+        }
+
+        function destroyWidget() {
+            if (window.DeliveryScheduler && window.widgetInstance) {
+                window.widgetInstance.destroy();
+                logEvent('Widget destroyed');
+            }
+        }
+    </script>
+</body>
+</html> 
