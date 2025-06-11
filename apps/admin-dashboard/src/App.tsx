@@ -1,51 +1,93 @@
 import { useState, useEffect } from "react";
 
-// Simple types for minimal functionality
+// Types
+type DeliveryArea = {
+  id: number;
+  name: string;
+  deliveryFee: number;
+  minimumOrder: number;
+  estimatedDeliveryTime: string;
+};
+
 type Location = {
   id: number;
   name: string;
   address: {
     address1: string;
+    address2?: string;
     city: string;
     province: string;
     country: string;
     zip: string;
   };
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ExpressTimeslot = {
+  id: number;
+  start: string;
+  end: string;
+  fee: number;
+};
+
+type TextCustomizations = {
+  deliveryType: string;
+  deliveryDate: string;
+  timeslot: string;
+  postalCode: string;
 };
 
 function App() {
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [activeTab, setActiveTab] = useState('delivery-areas');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [textCustomisations, setTextCustomisations] = useState({
+  
+  // Data states
+  const [deliveryAreas] = useState<DeliveryArea[]>([
+    { id: 1, name: 'Central Singapore', deliveryFee: 8.99, minimumOrder: 30, estimatedDeliveryTime: '2-3 hours' },
+    { id: 2, name: 'North Singapore', deliveryFee: 10.99, minimumOrder: 35, estimatedDeliveryTime: '3-4 hours' },
+    { id: 3, name: 'East Singapore', deliveryFee: 9.99, minimumOrder: 30, estimatedDeliveryTime: '2-3 hours' },
+    { id: 4, name: 'West Singapore', deliveryFee: 11.99, minimumOrder: 40, estimatedDeliveryTime: '3-4 hours' },
+    { id: 5, name: 'South Singapore', deliveryFee: 12.99, minimumOrder: 45, estimatedDeliveryTime: '3-4 hours' }
+  ]);
+  
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [expressTimeslots, setExpressTimeslots] = useState<ExpressTimeslot[]>([]);
+  const [textCustomizations, setTextCustomizations] = useState<TextCustomizations>({
     deliveryType: "Select delivery type...",
     deliveryDate: "Select a date...",
     timeslot: "Select a timeslot...",
     postalCode: "Enter your postal code..."
   });
 
+  // New location form state
+  const [newLocation, setNewLocation] = useState({
+    name: '',
+    address1: '',
+    address2: '',
+    city: '',
+    province: '',
+    country: 'Singapore',
+    zip: ''
+  });
+
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
   // Load data on component mount
   useEffect(() => {
-    loadData();
+    loadAllData();
   }, []);
 
-  const loadData = async () => {
+  const loadAllData = async () => {
     setLoading(true);
     try {
-      // Load locations
-      const locationsResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/locations`);
-      const locationsData = await locationsResponse.json();
-      if (locationsData.success) {
-        setLocations(locationsData.data.locations || []);
-      }
-
-      // Load text customisations
-      const textResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/text-customisations`);
-      const textData = await textResponse.json();
-      if (textData.success) {
-        setTextCustomisations(textData.data);
-      }
+      await Promise.all([
+        loadLocations(),
+        loadExpressTimeslots(),
+        loadTextCustomizations()
+      ]);
     } catch (err) {
       setError('Failed to load data');
       console.error('Failed to load data:', err);
@@ -54,136 +96,492 @@ function App() {
     }
   };
 
-  const handleTextCustomisationsSave = async () => {
+  const loadLocations = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/text-customisations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(textCustomisations)
-      });
-      
-      if (response.ok) {
-        alert('Text customisations saved successfully!');
-      } else {
-        alert('Failed to save text customisations');
+      const response = await fetch(`${apiUrl}/locations`);
+      const data = await response.json();
+      if (data.success) {
+        setLocations(data.data.locations || []);
       }
     } catch (err) {
-      alert('Error saving text customisations');
-      console.error('Error saving text customisations:', err);
+      console.error('Failed to load locations:', err);
     }
   };
 
+  const loadExpressTimeslots = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/express-timeslots`);
+      const data = await response.json();
+      if (data.success) {
+        setExpressTimeslots(data.data.expressTimeslots || []);
+      }
+    } catch (err) {
+      console.error('Failed to load express timeslots:', err);
+    }
+  };
+
+  const loadTextCustomizations = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/text-customisations`);
+      const data = await response.json();
+      if (data.success) {
+        setTextCustomizations(data.data);
+      }
+    } catch (err) {
+      console.error('Failed to load text customizations:', err);
+    }
+  };
+
+  const handleCreateLocation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`${apiUrl}/locations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newLocation.name,
+          address: {
+            address1: newLocation.address1,
+            address2: newLocation.address2,
+            city: newLocation.city,
+            province: newLocation.province,
+            country: newLocation.country,
+            zip: newLocation.zip
+          }
+        })
+      });
+      
+      if (response.ok) {
+        await loadLocations();
+        setNewLocation({
+          name: '', address1: '', address2: '', city: '', province: '', country: 'Singapore', zip: ''
+        });
+        alert('Location created successfully!');
+      } else {
+        alert('Failed to create location');
+      }
+    } catch (err) {
+      alert('Error creating location');
+      console.error('Error creating location:', err);
+    }
+  };
+
+  const handleSaveTextCustomizations = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/text-customisations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(textCustomizations)
+      });
+      
+      if (response.ok) {
+        alert('Text customizations saved successfully!');
+      } else {
+        alert('Failed to save text customizations');
+      }
+    } catch (err) {
+      alert('Error saving text customizations');
+      console.error('Error saving text customizations:', err);
+    }
+  };
+
+  const tabs = [
+    { id: 'delivery-areas', label: 'Delivery Areas', icon: '🗺️' },
+    { id: 'express-delivery', label: 'Express Delivery', icon: '⚡' },
+    { id: 'locations', label: 'Collection Locations', icon: '📍' },
+    { id: 'text-customizations', label: 'Text Customizations', icon: '✏️' },
+    { id: 'settings', label: 'Settings', icon: '⚙️' }
+  ];
+
   if (loading) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        Loading...
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading admin dashboard...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{ padding: '20px', color: 'red' }}>
-        Error: {error}
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+          <h3 className="text-red-800 font-semibold mb-2">Error Loading Dashboard</h3>
+          <p className="text-red-600">{error}</p>
+          <button 
+            onClick={loadAllData}
+            className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1>Shopify Delivery Scheduler - Admin Dashboard</h1>
-      
-      <div style={{ marginBottom: '30px' }}>
-        <h2>Text Customisations</h2>
-        <div style={{ display: 'grid', gap: '10px', maxWidth: '400px' }}>
-          <div>
-            <label>Delivery Type Label:</label>
-            <input
-              type="text"
-              value={textCustomisations.deliveryType}
-              onChange={(e) => setTextCustomisations(prev => ({ ...prev, deliveryType: e.target.value }))}
-              style={{ width: '100%', padding: '8px', marginTop: '4px' }}
-            />
-          </div>
-          <div>
-            <label>Delivery Date Label:</label>
-            <input
-              type="text"
-              value={textCustomisations.deliveryDate}
-              onChange={(e) => setTextCustomisations(prev => ({ ...prev, deliveryDate: e.target.value }))}
-              style={{ width: '100%', padding: '8px', marginTop: '4px' }}
-            />
-          </div>
-          <div>
-            <label>Timeslot Label:</label>
-            <input
-              type="text"
-              value={textCustomisations.timeslot}
-              onChange={(e) => setTextCustomisations(prev => ({ ...prev, timeslot: e.target.value }))}
-              style={{ width: '100%', padding: '8px', marginTop: '4px' }}
-            />
-          </div>
-          <div>
-            <label>Postal Code Label:</label>
-            <input
-              type="text"
-              value={textCustomisations.postalCode}
-              onChange={(e) => setTextCustomisations(prev => ({ ...prev, postalCode: e.target.value }))}
-              style={{ width: '100%', padding: '8px', marginTop: '4px' }}
-            />
-          </div>
-          <button
-            onClick={handleTextCustomisationsSave}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Save Text Customisations
-          </button>
-        </div>
-      </div>
-
-      <div>
-        <h2>Collection Locations ({locations.length})</h2>
-        {locations.length === 0 ? (
-          <p>No collection locations configured.</p>
-        ) : (
-          <div style={{ display: 'grid', gap: '10px' }}>
-            {locations.map((location) => (
-              <div
-                key={location.id}
-                style={{
-                  padding: '15px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  backgroundColor: location.isActive ? '#f8f9fa' : '#f1f3f4'
-                }}
-              >
-                <h3 style={{ margin: '0 0 10px 0' }}>{location.name}</h3>
-                <p style={{ margin: '0', color: '#666' }}>
-                  {location.address.address1}, {location.address.city}, {location.address.province} {location.address.zip}
-                </p>
-                <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: location.isActive ? '#28a745' : '#dc3545' }}>
-                  Status: {location.isActive ? 'Active' : 'Inactive'}
-                </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Delivery Scheduler Admin
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Manage delivery areas, express options, and system settings
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                API Connected
               </div>
-            ))}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      </header>
 
-      <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
-        <h3>API Status</h3>
-        <p>API URL: {import.meta.env.VITE_API_URL || 'http://localhost:3001'}</p>
-        <p>Locations loaded: {locations.length}</p>
-        <p>Text customisations loaded: {Object.keys(textCustomisations).length > 0 ? 'Yes' : 'No'}</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Navigation Tabs */}
+        <div className="bg-white rounded-lg shadow-sm mb-8">
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8 px-6" aria-label="Tabs">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
+                >
+                  <span>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-6">
+            {/* Delivery Areas Tab */}
+            {activeTab === 'delivery-areas' && (
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Delivery Areas Management</h2>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {deliveryAreas.map((area) => (
+                    <div key={area.id} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">{area.name}</h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Delivery Fee:</span>
+                          <span className="font-medium">${area.deliveryFee}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Minimum Order:</span>
+                          <span className="font-medium">${area.minimumOrder}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Delivery Time:</span>
+                          <span className="font-medium">{area.estimatedDeliveryTime}</span>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex space-x-2">
+                        <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                          Edit
+                        </button>
+                        <button className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700">
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Express Delivery Tab */}
+            {activeTab === 'express-delivery' && (
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Express Delivery Timeslots</h2>
+                <div className="bg-white rounded-lg border border-gray-200">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Time Slot
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Express Fee
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {expressTimeslots.map((slot) => (
+                          <tr key={slot.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {slot.start} - {slot.end}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {slot.fee === 0 ? 'Free' : `$${slot.fee}`}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                slot.fee === 0 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {slot.fee === 0 ? 'Standard' : 'Premium'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                              <button className="text-red-600 hover:text-red-900">Remove</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <button className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                  Add New Timeslot
+                </button>
+              </div>
+            )}
+
+            {/* Collection Locations Tab */}
+            {activeTab === 'locations' && (
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Collection Locations</h2>
+                
+                {/* Add New Location Form */}
+                <div className="bg-gray-50 rounded-lg p-6 mb-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Location</h3>
+                  <form onSubmit={handleCreateLocation} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
+                      <input
+                        type="text"
+                        value={newLocation.name}
+                        onChange={(e) => setNewLocation(prev => ({ ...prev, name: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        placeholder="Main Store"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 1</label>
+                      <input
+                        type="text"
+                        value={newLocation.address1}
+                        onChange={(e) => setNewLocation(prev => ({ ...prev, address1: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        placeholder="123 Main Street"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 2</label>
+                      <input
+                        type="text"
+                        value={newLocation.address2}
+                        onChange={(e) => setNewLocation(prev => ({ ...prev, address2: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        placeholder="Unit #01-01"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                      <input
+                        type="text"
+                        value={newLocation.city}
+                        onChange={(e) => setNewLocation(prev => ({ ...prev, city: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        placeholder="Singapore"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Province</label>
+                      <input
+                        type="text"
+                        value={newLocation.province}
+                        onChange={(e) => setNewLocation(prev => ({ ...prev, province: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        placeholder="Singapore"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+                      <input
+                        type="text"
+                        value={newLocation.zip}
+                        onChange={(e) => setNewLocation(prev => ({ ...prev, zip: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        placeholder="123456"
+                        required
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <button
+                        type="submit"
+                        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                      >
+                        Create Location
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Existing Locations */}
+                <div className="space-y-4">
+                  {locations.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">No collection locations configured yet.</p>
+                  ) : (
+                    locations.map((location) => (
+                      <div key={location.id} className="bg-white rounded-lg border border-gray-200 p-6">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">{location.name}</h3>
+                            <p className="text-gray-600 mt-1">
+                              {location.address.address1}
+                              {location.address.address2 && `, ${location.address.address2}`}
+                            </p>
+                            <p className="text-gray-600">
+                              {location.address.city}, {location.address.province} {location.address.zip}
+                            </p>
+                            <p className="text-gray-600">{location.address.country}</p>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              location.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {location.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                            <button className="text-blue-600 hover:text-blue-900">Edit</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Text Customizations Tab */}
+            {activeTab === 'text-customizations' && (
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Text Customizations</h2>
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Type Label</label>
+                      <input
+                        type="text"
+                        value={textCustomizations.deliveryType}
+                        onChange={(e) => setTextCustomizations(prev => ({ ...prev, deliveryType: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Date Label</label>
+                      <input
+                        type="text"
+                        value={textCustomizations.deliveryDate}
+                        onChange={(e) => setTextCustomizations(prev => ({ ...prev, deliveryDate: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Timeslot Label</label>
+                      <input
+                        type="text"
+                        value={textCustomizations.timeslot}
+                        onChange={(e) => setTextCustomizations(prev => ({ ...prev, timeslot: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code Label</label>
+                      <input
+                        type="text"
+                        value={textCustomizations.postalCode}
+                        onChange={(e) => setTextCustomizations(prev => ({ ...prev, postalCode: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleSaveTextCustomizations}
+                    className="mt-6 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Settings Tab */}
+            {activeTab === 'settings' && (
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">System Settings</h2>
+                <div className="space-y-6">
+                  {/* API Status */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">API Connection</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">API URL:</span>
+                        <span className="font-mono text-sm">{apiUrl}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Status:</span>
+                        <span className="text-green-600 font-medium">Connected</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Locations loaded:</span>
+                        <span className="font-medium">{locations.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Express timeslots:</span>
+                        <span className="font-medium">{expressTimeslots.length}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* System Info */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">System Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Dashboard Version:</span>
+                        <span className="font-mono">1.0.0</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Build Date:</span>
+                        <span className="font-mono">{new Date().toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Environment:</span>
+                        <span className="font-mono">Production</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
