@@ -1,5 +1,5 @@
 [build]
-  publish = "dist"
+  publish = "apps/admin-dashboard/dist"
   command = "npx --yes pnpm@latest install && pnpm run build"
 
 [build.environment]
