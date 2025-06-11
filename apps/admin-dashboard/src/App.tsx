@@ -112,6 +112,14 @@ function App() {
     postalCode: "Enter your postal code..."
   });
 
+  // Postal code management states
+  const [testPostalCode, setTestPostalCode] = useState('');
+  const [postalCodeResult, setPostalCodeResult] = useState<any>(null);
+  const [areaCodeInput, setAreaCodeInput] = useState('');
+  const [bulkPostalInput, setBulkPostalInput] = useState('');
+  const [blockedAreaCodes, setBlockedAreaCodes] = useState<string[]>([]);
+  const [blockedPostalCodes, setBlockedPostalCodes] = useState<string[]>([]);
+
   // Form states
   const [newLocation, setNewLocation] = useState({
     name: '', address1: '', address2: '', city: '', province: '', country: 'Singapore', zip: ''
@@ -303,6 +311,94 @@ function App() {
   const getDayName = (dayOfWeek: number) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[dayOfWeek];
+  };
+
+  // Postal code management functions
+  const validateTestPostalCode = async () => {
+    if (!testPostalCode.trim()) return;
+    
+    try {
+      const response = await fetch(`${apiUrl}/postal-code/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          postalCode: testPostalCode,
+          shopDomain: 'admin-test.myshopify.com'
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setPostalCodeResult(data.data);
+      } else {
+        setPostalCodeResult({ isValid: false, error: data.error });
+      }
+    } catch (err) {
+      setPostalCodeResult({ isValid: false, error: 'Failed to validate postal code' });
+      console.error('Postal code validation error:', err);
+    }
+  };
+
+  const blockAreaCodes = () => {
+    if (!areaCodeInput.trim()) return;
+    
+    const newCodes: string[] = [];
+    const parts = areaCodeInput.split(',').map(part => part.trim());
+    
+    parts.forEach(part => {
+      if (part.includes('-')) {
+        // Handle range like "09-13"
+        const [start, end] = part.split('-').map(num => parseInt(num.trim()));
+        for (let i = start; i <= end; i++) {
+          const code = i.toString().padStart(2, '0');
+          if (!blockedAreaCodes.includes(code)) {
+            newCodes.push(code);
+          }
+        }
+      } else {
+        // Handle individual codes like "01"
+        const code = part.padStart(2, '0');
+        if (!blockedAreaCodes.includes(code)) {
+          newCodes.push(code);
+        }
+      }
+    });
+    
+    setBlockedAreaCodes([...blockedAreaCodes, ...newCodes]);
+    setAreaCodeInput('');
+    alert(`Blocked ${newCodes.length} area codes`);
+  };
+
+  const blockBulkPostalCodes = () => {
+    if (!bulkPostalInput.trim()) return;
+    
+    const codes = bulkPostalInput
+      .split(/[,\n]/)
+      .map(code => code.trim().replace(/[^0-9]/g, ''))
+      .filter(code => code.length === 6 && !blockedPostalCodes.includes(code));
+    
+    setBlockedPostalCodes([...blockedPostalCodes, ...codes]);
+    setBulkPostalInput('');
+    alert(`Blocked ${codes.length} postal codes`);
+  };
+
+  const unblockAreaCode = (code: string) => {
+    setBlockedAreaCodes(blockedAreaCodes.filter(c => c !== code));
+  };
+
+  const unblockPostalCode = (code: string) => {
+    setBlockedPostalCodes(blockedPostalCodes.filter(c => c !== code));
+  };
+
+  const getAreaPostalCodes = (areaName: string): string => {
+    const areaMap: Record<string, string> = {
+      'Central Singapore': '01-08',
+      'North Singapore': '09-13', 
+      'East Singapore': '14-18',
+      'West Singapore': '19-23',
+      'South Singapore': '24-28'
+    };
+    return areaMap[areaName] || 'Unknown';
   };
 
   const tabs = [
@@ -606,36 +702,234 @@ function App() {
               </div>
             )}
 
-            {/* Additional tabs would continue here... */}
-            {/* I'll create the remaining tabs in the next part due to length constraints */}
-            
+            {/* Delivery Areas Tab */}
             {activeTab === 'delivery-areas' && (
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Delivery Areas Management</h2>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {deliveryAreas.map((area) => (
-                    <div key={area.id} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">{area.name}</h3>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Delivery Fee:</span>
-                          <span className="font-medium">${area.deliveryFee}</span>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-gray-900">Delivery Areas & Postal Code Management</h2>
+                  <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                    Add New Area
+                  </button>
+                </div>
+
+                {/* Postal Code Validator */}
+                <div className="bg-white shadow-md rounded-lg p-6">
+                  <h3 className="text-lg font-semibold mb-4">Singapore Postal Code Validator</h3>
+                  <div className="flex gap-4 mb-4">
+                    <input
+                      type="text"
+                      placeholder="Enter postal code (e.g., 238880)"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                      value={testPostalCode}
+                      onChange={(e) => setTestPostalCode(e.target.value)}
+                    />
+                    <button
+                      onClick={validateTestPostalCode}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                    >
+                      Validate
+                    </button>
+                  </div>
+                  {postalCodeResult && (
+                    <div className={`p-4 rounded-md ${postalCodeResult.isValid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                      <p className={`font-medium ${postalCodeResult.isValid ? 'text-green-800' : 'text-red-800'}`}>
+                        {postalCodeResult.isValid ? '✓ Valid postal code' : '✗ Invalid postal code'}
+                      </p>
+                      {postalCodeResult.deliveryArea && (
+                        <div className="mt-2 text-sm text-gray-600">
+                          <p>Area: {postalCodeResult.deliveryArea.name}</p>
+                          <p>Delivery Fee: ${postalCodeResult.deliveryArea.deliveryFee}</p>
+                          <p>Minimum Order: ${postalCodeResult.deliveryArea.minimumOrder}</p>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Minimum Order:</span>
-                          <span className="font-medium">${area.minimumOrder}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Delivery Time:</span>
-                          <span className="font-medium">{area.estimatedDeliveryTime}</span>
+                      )}
+                      {postalCodeResult.error && (
+                        <p className="mt-2 text-sm text-red-600">{postalCodeResult.error}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Blocked Postal Codes Management */}
+                <div className="bg-white shadow-md rounded-lg p-6">
+                  <h3 className="text-lg font-semibold mb-4">Blocked Postal Codes</h3>
+                  
+                  {/* Bulk Block by Area Codes */}
+                  <div className="mb-6">
+                    <h4 className="font-medium mb-2">Block by Area Codes (First 2 digits)</h4>
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        type="text"
+                        placeholder="e.g., 01,02,03 or 09-13"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        value={areaCodeInput}
+                        onChange={(e) => setAreaCodeInput(e.target.value)}
+                      />
+                      <button
+                        onClick={blockAreaCodes}
+                        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm"
+                      >
+                        Block Area Codes
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Examples: "01,02,03" (individual codes) or "09-13" (range) or "19-23,26" (mixed)
+                    </p>
+                  </div>
+
+                  {/* Bulk Block Individual Postal Codes */}
+                  <div className="mb-6">
+                    <h4 className="font-medium mb-2">Block Individual Postal Codes</h4>
+                    <div className="flex gap-2 mb-3">
+                      <textarea
+                        placeholder="Enter postal codes separated by commas or new lines&#10;e.g., 238880, 018989, 408600"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm h-20"
+                        value={bulkPostalInput}
+                        onChange={(e) => setBulkPostalInput(e.target.value)}
+                      />
+                      <button
+                        onClick={blockBulkPostalCodes}
+                        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm"
+                      >
+                        Block Postal Codes
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Currently Blocked List */}
+                  <div>
+                    <h4 className="font-medium mb-2">Currently Blocked</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Blocked Area Codes */}
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-700 mb-2">Blocked Area Codes:</h5>
+                        <div className="max-h-32 overflow-y-auto border border-gray-200 rounded p-2">
+                          {blockedAreaCodes.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {blockedAreaCodes.map(code => (
+                                <span key={code} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+                                  {code}xxxx
+                                  <button
+                                    onClick={() => unblockAreaCode(code)}
+                                    className="ml-1 text-red-600 hover:text-red-800"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500">No area codes blocked</p>
+                          )}
                         </div>
                       </div>
-                      <div className="mt-4 flex space-x-2">
-                        <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">Edit</button>
-                        <button className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700">Details</button>
+
+                      {/* Blocked Individual Postal Codes */}
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-700 mb-2">Blocked Postal Codes:</h5>
+                        <div className="max-h-32 overflow-y-auto border border-gray-200 rounded p-2">
+                          {blockedPostalCodes.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {blockedPostalCodes.map(code => (
+                                <span key={code} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+                                  {code}
+                                  <button
+                                    onClick={() => unblockPostalCode(code)}
+                                    className="ml-1 text-red-600 hover:text-red-800"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500">No postal codes blocked</p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                </div>
+
+                {/* Singapore Area Code Reference */}
+                <div className="bg-white shadow-md rounded-lg p-6">
+                  <h3 className="text-lg font-semibold mb-4">Singapore Postal Code Reference</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">Central (01-08)</h4>
+                      <ul className="text-gray-600 space-y-1">
+                        <li>01-02: CBD, Marina Bay</li>
+                        <li>03-04: Queenstown, Tiong Bahru</li>
+                        <li>05-06: Bukit Timah, Clementi</li>
+                        <li>07-08: Orchard, Museum</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">North (09-13)</h4>
+                      <ul className="text-gray-600 space-y-1">
+                        <li>09-10: Woodlands, Sembawang</li>
+                        <li>11-12: Yishun, Punggol</li>
+                        <li>13: Ang Mo Kio, Bishan</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">East (14-18)</h4>
+                      <ul className="text-gray-600 space-y-1">
+                        <li>14-15: Geylang, Katong</li>
+                        <li>16-17: Bedok, Changi</li>
+                        <li>18: Tampines, Pasir Ris</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">West (19-23)</h4>
+                      <ul className="text-gray-600 space-y-1">
+                        <li>19: Jurong, Tuas</li>
+                        <li>20-21: Bukit Batok, CCK</li>
+                        <li>22-23: Kranji, Tengah</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">South (24-28)</h4>
+                      <ul className="text-gray-600 space-y-1">
+                        <li>24-25: Sentosa, Keppel</li>
+                        <li>26-27: Bukit Merah, Alexandra</li>
+                        <li>28: Dover, Clementi</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Delivery Areas Table */}
+                <div className="bg-white shadow-md rounded-lg overflow-hidden">
+                  <h3 className="text-lg font-semibold p-6 border-b border-gray-200">Delivery Areas</h3>
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Area Name</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Postal Codes</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Fee</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Min Order</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Time</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {deliveryAreas.map((area) => (
+                        <tr key={area.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{area.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {getAreaPostalCodes(area.name)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${area.deliveryFee}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${area.minimumOrder}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{area.estimatedDeliveryTime}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button className="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                            <button className="text-red-600 hover:text-red-900">Delete</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
