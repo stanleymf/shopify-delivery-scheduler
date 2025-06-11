@@ -6,8 +6,17 @@ Add this to your Shopify theme to integrate the delivery scheduler widget
 2. Add the widget container and initialization script to your cart page or product page
 -->
 
+<!--
+Shopify Delivery Scheduler - Theme Integration
+Copy this code to your Shopify theme.liquid file
+
+ACTUAL URLs CONFIGURED:
+- Widget URL: https://thunderous-centaur-f3a7c6.netlify.app
+- API URL: https://shopify-delivery-scheduler-production.up.railway.app
+-->
+
 <!-- Step 1: Add this to your theme.liquid file in the <head> section -->
-<script src="https://your-widget-url.netlify.app/delivery-scheduler.iife.js"></script>
+<script src="https://thunderous-centaur-f3a7c6.netlify.app/delivery-scheduler.iife.js"></script>
 
 <!-- Step 2: Add this to your cart page (cart.liquid) or product page -->
 <div id="delivery-scheduler-widget"></div>
@@ -16,7 +25,7 @@ Add this to your Shopify theme to integrate the delivery scheduler widget
   // Initialize the delivery scheduler widget
   window.DeliveryScheduler.init({
     // Required: Your deployed API URL
-    apiUrl: 'https://your-railway-api.up.railway.app',
+    apiUrl: 'https://shopify-delivery-scheduler-production.up.railway.app',
     
     // Required: Your shop domain (Shopify will replace this)
     shopDomain: '{{ shop.permanent_domain }}',

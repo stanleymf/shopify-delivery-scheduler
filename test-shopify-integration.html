@@ -71,9 +71,10 @@
         <div class="test-section">
             <h2>📋 Configuration</h2>
             <p><strong>API URL:</strong> <span class="url-display" id="api-url">https://shopify-delivery-scheduler-production.up.railway.app</span> <button class="copy-button" onclick="copyToClipboard('api-url')">Copy</button></p>
+            <p><strong>Admin Dashboard:</strong> <span class="url-display" id="admin-url">https://dashing-nougat-dc3499.netlify.app</span> <button class="copy-button" onclick="copyToClipboard('admin-url')">Copy</button></p>
+            <p><strong>Customer Widget:</strong> <span class="url-display" id="widget-url">https://thunderous-centaur-f3a7c6.netlify.app/delivery-scheduler.iife.js</span> <button class="copy-button" onclick="copyToClipboard('widget-url')">Copy</button></p>
             <p><strong>Shop Domain:</strong> <span id="shop-domain">test-shop.myshopify.com</span></p>
             <p><strong>Widget Status:</strong> <span id="widget-status">Not loaded</span></p>
-            <p><strong>Widget URL:</strong> <span class="url-display" id="widget-url">https://your-widget-url.netlify.app/delivery-scheduler.iife.js</span> <button class="copy-button" onclick="copyToClipboard('widget-url')">Copy</button></p>
         </div>
 
         <div class="test-section">
@@ -108,7 +109,7 @@
             <p>Copy this code to your Shopify theme.liquid file:</p>
             <pre id="integration-code">
 <!-- Delivery Scheduler Widget -->
-<script src="https://your-widget-url.netlify.app/delivery-scheduler.iife.js"></script>
+<script src="https://thunderous-centaur-f3a7c6.netlify.app/delivery-scheduler.iife.js"></script>
 
 <div id="delivery-scheduler-widget"></div>
 
@@ -146,13 +147,15 @@
         // Configuration
         const config = {
             apiUrl: 'https://shopify-delivery-scheduler-production.up.railway.app',
+            adminUrl: 'https://dashing-nougat-dc3499.netlify.app',
             shopDomain: 'test-shop.myshopify.com',
-            widgetUrl: 'https://your-widget-url.netlify.app/delivery-scheduler.iife.js'
+            widgetUrl: 'https://thunderous-centaur-f3a7c6.netlify.app/delivery-scheduler.iife.js'
         };
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('api-url').textContent = config.apiUrl;
+            document.getElementById('admin-url').textContent = config.adminUrl;
             document.getElementById('shop-domain').textContent = config.shopDomain;
             document.getElementById('widget-url').textContent = config.widgetUrl;
             
