@@ -5,6 +5,17 @@ export default defineConfig({
   server: {
     port: 3001
   },
+  build: {
+    target: 'node18',
+    outDir: 'dist',
+    rollupOptions: {
+      input: 'src/app.ts',
+      output: {
+        format: 'es',
+        entryFileNames: 'app.js'
+      }
+    }
+  },
   plugins: [
     ...VitePluginNode({
       adapter: 'express',
