@@ -2,9 +2,13 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
+# Copy workspace files from parent directories
+COPY ../../pnpm-lock.yaml ./
+COPY ../../pnpm-workspace.yaml ./
+COPY ../../package.json ./
+
+# Copy the API package files
+COPY package*.json ./apps/api/
 
 # Install pnpm
 RUN npm install -g pnpm
@@ -12,8 +16,11 @@ RUN npm install -g pnpm
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
-COPY . .
+# Copy the API source code
+COPY . ./apps/api/
+
+# Change to API directory for build
+WORKDIR /app/apps/api
 
 # Build the application
 RUN pnpm run build
