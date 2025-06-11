@@ -1,0 +1,110 @@
+<!--
+Shopify Delivery Scheduler - Theme Integration Example
+Add this to your Shopify theme to integrate the delivery scheduler widget
+
+1. Add the script tag to your theme.liquid file in the <head> section
+2. Add the widget container and initialization script to your cart page or product page
+-->
+
+<!-- Step 1: Add this to your theme.liquid file in the <head> section -->
+<script src="https://your-widget-url.com/delivery-scheduler.iife.js"></script>
+
+<!-- Step 2: Add this to your cart page (cart.liquid) or product page -->
+<div id="delivery-scheduler-widget"></div>
+
+<script>
+  // Initialize the delivery scheduler widget
+  window.DeliveryScheduler.init({
+    // Required: Your deployed API URL
+    apiUrl: 'https://your-api-url.com',
+    
+    // Required: Your shop domain (Shopify will replace this)
+    shopDomain: '{{ shop.permanent_domain }}',
+    
+    // Optional: Theme configuration
+    theme: 'light', // 'light', 'dark', or 'auto'
+    language: 'en',
+    currency: '{{ shop.currency }}',
+    timezone: '{{ shop.timezone }}',
+    
+    // Optional: Feature toggles
+    showProductAvailability: true,
+    allowExpressDelivery: true,
+    maxFutureDays: 30,
+    
+    // Optional: Postal code validation settings
+    enablePostalCodeValidation: true,
+    enablePostalCodeAutoComplete: true,
+    postalCodeAutoCompleteDelay: 500,
+    showPostalCodeSuggestions: true,
+    maxPostalCodeSuggestions: 5
+  });
+</script>
+
+<!-- Step 3: Optional - Add custom CSS for styling -->
+<style>
+  #delivery-scheduler-widget {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #fff;
+  }
+  
+  /* Custom styling for the widget */
+  .delivery-scheduler {
+    font-family: inherit;
+  }
+  
+  .delivery-scheduler h3 {
+    color: {{ settings.color_primary }};
+  }
+  
+  .delivery-scheduler button {
+    transition: all 0.2s ease;
+  }
+  
+  .delivery-scheduler button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+</style>
+
+<!--
+Alternative: Add to product page (product.liquid) for delivery options during purchase
+-->
+
+<!--
+Alternative: Add to checkout page for delivery scheduling during checkout
+Note: This requires Shopify Plus or custom checkout modifications
+-->
+
+<!--
+Event Handling Example:
+The widget emits events that you can listen to for integration with your cart/checkout
+-->
+
+<script>
+  // Listen for delivery selection events
+  document.addEventListener('deliverySchedulerEvent', function(event) {
+    const { type, payload } = event.detail;
+    
+    switch(type) {
+      case 'DELIVERY_TYPE_SELECTED':
+        console.log('Delivery type selected:', payload.deliveryType);
+        // Update cart attributes or session storage
+        break;
+        
+      case 'POSTAL_CODE_VALIDATED':
+        console.log('Postal code validated:', payload);
+        // Update shipping methods or cart
+        break;
+        
+      case 'DELIVERY_DATE_SELECTED':
+        console.log('Delivery scheduled:', payload);
+        // Add delivery info to cart or order
+        // payload includes: date, timeslotId, deliveryType, location, expressFee, deliveryNotes
+        break;
+    }
+  });
+</script> 

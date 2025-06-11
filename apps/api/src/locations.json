@@ -1,0 +1,19 @@
+{
+  "locations": [
+    {
+      "id": 1749617000258,
+      "name": "Main Store",
+      "address": {
+        "address1": "123 Main Street",
+        "address2": "",
+        "city": "Singapore",
+        "province": "",
+        "country": "Singapore",
+        "zip": "123456"
+      },
+      "isActive": true,
+      "createdAt": "2025-06-11T04:43:20.258Z",
+      "updatedAt": "2025-06-11T04:43:20.258Z"
+    }
+  ]
+}

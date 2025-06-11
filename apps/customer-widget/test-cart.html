@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopify Cart - Delivery Scheduler Test</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        /* Header */
+        .header {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .nav a:hover {
+            color: #2563eb;
+        }
+
+        /* Main content */
+        .main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+
+        /* Cart items */
+        .cart-items {
+            background: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .cart-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #111827;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-image {
+            width: 80px;
+            height: 80px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #111827;
+        }
+
+        .item-variant {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-price {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quantity-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #d1d5db;
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-btn:hover {
+            background: #f9fafb;
+        }
+
+        /* Cart summary */
+        .cart-summary {
+            background: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .summary-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #111827;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .summary-row.total {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #111827;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        /* Delivery scheduler container */
+        .delivery-scheduler-container {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .delivery-scheduler-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #111827;
+        }
+
+        /* Checkout button */
+        .checkout-btn {
+            width: 100%;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 1rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .checkout-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .checkout-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🌹 Windflower Florist</div>
+            <nav class="nav">
+                <a href="#">Shop</a>
+                <a href="#">Collections</a>
+                <a href="#">About</a>
+                <a href="#">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="main">
+        <!-- Cart items -->
+        <div class="cart-items">
+            <h1 class="cart-title">Your Cart (2 items)</h1>
+            
+            <div class="cart-item">
+                <div class="item-image">🌹</div>
+                <div class="item-details">
+                    <div class="item-name">Spring Tulip Bouquet</div>
+                    <div class="item-variant">Size: Medium</div>
+                    <div class="item-price">$89.99</div>
+                </div>
+                <div class="item-quantity">
+                    <button class="quantity-btn">-</button>
+                    <span>1</span>
+                    <button class="quantity-btn">+</button>
+                </div>
+            </div>
+
+            <div class="cart-item">
+                <div class="item-image">🌷</div>
+                <div class="item-details">
+                    <div class="item-name">Red Rose Bouquet</div>
+                    <div class="item-variant">Size: Large</div>
+                    <div class="item-price">$124.99</div>
+                </div>
+                <div class="item-quantity">
+                    <button class="quantity-btn">-</button>
+                    <span>1</span>
+                    <button class="quantity-btn">+</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart summary -->
+        <div class="cart-summary">
+            <h2 class="summary-title">Order Summary</h2>
+            
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span>$214.98</span>
+            </div>
+            <div class="summary-row">
+                <span>Shipping</span>
+                <span>$8.99</span>
+            </div>
+            <div class="summary-row">
+                <span>Tax</span>
+                <span>$17.20</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total</span>
+                <span>$241.17</span>
+            </div>
+
+            <!-- Delivery Scheduler Widget -->
+            <div class="delivery-scheduler-container">
+                <h3 class="delivery-scheduler-title">Delivery Options</h3>
+                <div id="delivery-scheduler-widget"></div>
+            </div>
+
+            <button class="checkout-btn" id="checkout-btn" disabled>
+                Proceed to Checkout
+            </button>
+        </div>
+    </main>
+
+    <!-- React and ReactDOM for widget bundle -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Load the widget bundle -->
+    <script src="dist/delivery-scheduler.iife.js"></script>
+    <!-- Debug: Log the global after loading -->
+    <script>
+      try {
+        console.log('window.DeliveryScheduler:', window.DeliveryScheduler);
+        if (!window.DeliveryScheduler) {
+          document.getElementById('delivery-scheduler-widget').innerHTML = '<p style="color:red">window.DeliveryScheduler is undefined</p>';
+        }
+      } catch (e) {
+        document.getElementById('delivery-scheduler-widget').innerHTML = '<p style="color:red">Error: ' + e.message + '</p>';
+      }
+    </script>
+
+    <script>
+        // Mock API server for testing
+        // Existing valid codes: M5V3A8, M5V3A9, M5V3B0, M5V3B1
+        // Added: 510229
+        const validCodes = ['M5V3A8', 'M5V3A9', 'M5V3B0', 'M5V3B1', '510229'];
+        const mockApiServer = {
+            // Mock locations
+            async getLocations() {
+                console.log('Mock API: Getting locations');
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                return {
+                    success: true,
+                    data: {
+                        locations: [
+                            {
+                                id: 1,
+                                name: 'Main Store',
+                                address: {
+                                    address1: '123 Main Street',
+                                    address2: 'Suite 100',
+                                    city: 'Singapore',
+                                    province: 'Central',
+                                    country: 'Singapore',
+                                    zip: '123456'
+                                },
+                                isActive: true,
+                                createdAt: '2025-06-11T04:43:20.258Z',
+                                updatedAt: '2025-06-11T04:43:20.258Z'
+                            },
+                            {
+                                id: 2,
+                                name: 'Downtown Branch',
+                                address: {
+                                    address1: '456 Orchard Road',
+                                    address2: '',
+                                    city: 'Singapore',
+                                    province: 'Central',
+                                    country: 'Singapore',
+                                    zip: '789012'
+                                },
+                                isActive: true,
+                                createdAt: '2025-06-11T04:44:20.258Z',
+                                updatedAt: '2025-06-11T04:44:20.258Z'
+                            }
+                        ]
+                    }
+                };
+            },
+
+            // Mock text customisations
+            async getTextCustomisations() {
+                console.log('Mock API: Getting text customisations');
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                return {
+                    success: true,
+                    data: {
+                        deliveryType: "Choose your delivery method",
+                        deliveryDate: "Select your preferred date",
+                        timeslot: "Choose a time slot",
+                        postalCode: "Enter your postal code"
+                    }
+                };
+            },
+
+            // Mock express timeslots
+            async getExpressTimeslots() {
+                console.log('Mock API: Getting express timeslots');
+                await new Promise(resolve => setTimeout(resolve, 150));
+                
+                return {
+                    success: true,
+                    data: {
+                        expressTimeslots: [
+                            { id: 1, start: "10:30", end: "11:30", fee: 25 },
+                            { id: 2, start: "11:30", end: "12:30", fee: 20 },
+                            { id: 3, start: "12:30", end: "13:30", fee: 10 },
+                            { id: 4, start: "13:30", end: "14:30", fee: 0 },
+                            { id: 5, start: "14:30", end: "15:30", fee: 0 },
+                            { id: 6, start: "15:30", end: "16:30", fee: 0 },
+                            { id: 7, start: "16:30", end: "17:30", fee: 0 }
+                        ]
+                    }
+                };
+            },
+
+            // Mock postal code validation
+            async validatePostalCode(postalCode, shopDomain) {
+                console.log('Mock API: Validating postal code:', postalCode);
+                
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Mock validation logic
+                const isValid = validCodes.includes(postalCode.toUpperCase());
+                
+                if (isValid) {
+                    return {
+                        success: true,
+                        data: {
+                            postalCode: postalCode,
+                            isValid: true,
+                            deliveryArea: {
+                                id: 1,
+                                name: 'Downtown Toronto',
+                                deliveryFee: 5.00,
+                                minimumOrder: 25.00,
+                                estimatedDeliveryTime: '2-3 hours'
+                            },
+                            error: null,
+                            suggestions: []
+                        }
+                    };
+                } else {
+                    return {
+                        success: true,
+                        data: {
+                            postalCode: postalCode,
+                            isValid: false,
+                            deliveryArea: null,
+                            error: 'Postal code not in delivery area',
+                            suggestions: validCodes.filter(code => 
+                                code.startsWith(postalCode.toUpperCase().substring(0, 3))
+                            )
+                        }
+                    };
+                }
+            },
+            
+            // Mock availability check
+            async checkAvailability(date, deliveryAreaId, shopDomain) {
+                console.log('Mock API: Checking availability for:', date, 'area:', deliveryAreaId);
+                
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                // Mock availability logic
+                const selectedDate = new Date(date);
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(today.getDate() + 1);
+                
+                // Only allow future dates
+                if (selectedDate <= today) {
+                    return {
+                        success: true,
+                        data: {
+                            date: date,
+                            available: false,
+                            availableTimeslots: []
+                        }
+                    };
+                }
+                
+                // Mock timeslots
+                const timeslots = [
+                    {
+                        id: 1,
+                        start: '09:00 AM',
+                        end: '11:00 AM',
+                        availableSlots: 5,
+                        cutoffTime: '06:00 AM'
+                    },
+                    {
+                        id: 2,
+                        start: '11:00 AM',
+                        end: '01:00 PM',
+                        availableSlots: 3,
+                        cutoffTime: '08:00 AM'
+                    },
+                    {
+                        id: 3,
+                        start: '02:00 PM',
+                        end: '04:00 PM',
+                        availableSlots: 7,
+                        cutoffTime: '11:00 AM'
+                    },
+                    {
+                        id: 4,
+                        start: '04:00 PM',
+                        end: '06:00 PM',
+                        availableSlots: 2,
+                        cutoffTime: '01:00 PM'
+                    }
+                ];
+                
+                return {
+                    success: true,
+                    data: {
+                        date: date,
+                        available: true,
+                        availableTimeslots: timeslots
+                    }
+                };
+            }
+        };
+        
+        // Intercept fetch calls to mock API
+        const originalFetch = window.fetch;
+        window.fetch = async function(url, options) {
+            console.log('Fetch intercepted:', url, options);
+            
+            // Handle locations
+            if (url.includes('/locations')) {
+                const response = await mockApiServer.getLocations();
+                return {
+                    ok: true,
+                    json: async () => response
+                };
+            }
+            
+            // Handle text customisations
+            if (url.includes('/text-customisations')) {
+                const response = await mockApiServer.getTextCustomisations();
+                return {
+                    ok: true,
+                    json: async () => response
+                };
+            }
+            
+            // Handle express timeslots
+            if (url.includes('/express-timeslots')) {
+                const response = await mockApiServer.getExpressTimeslots();
+                return {
+                    ok: true,
+                    json: async () => response
+                };
+            }
+            
+            // Handle postal code validation
+            if (url.includes('/postal-code/validate')) {
+                const body = JSON.parse(options.body);
+                const response = await mockApiServer.validatePostalCode(body.postalCode, body.shopDomain);
+                return {
+                    ok: true,
+                    json: async () => response
+                };
+            }
+            
+            // Handle availability check
+            if (url.includes('/availability')) {
+                const body = JSON.parse(options.body);
+                const response = await mockApiServer.checkAvailability(body.date, body.deliveryAreaId, body.shopDomain);
+                return {
+                    ok: true,
+                    json: async () => response
+                };
+            }
+            
+            // Pass through other requests
+            return originalFetch.apply(this, arguments);
+        };
+
+        // Initialize the widget
+        document.addEventListener('DOMContentLoaded', function() {
+            const widgetConfig = {
+                apiUrl: 'http://localhost:3001',
+                shopDomain: 'test-shop.myshopify.com',
+                theme: 'light',
+                language: 'en',
+                currency: 'CAD',
+                timezone: 'America/Toronto',
+                showProductAvailability: true,
+                allowExpressDelivery: true,
+                maxFutureDays: 30,
+                enablePostalCodeValidation: true,
+                enablePostalCodeAutoComplete: true,
+                postalCodeAutoCompleteDelay: 500,
+                showPostalCodeSuggestions: true,
+                maxPostalCodeSuggestions: 5
+            };
+            
+            const container = document.getElementById('delivery-scheduler-widget');
+            
+            // Initialize widget
+            if (window.DeliveryScheduler && window.DeliveryScheduler.initDeliveryScheduler) {
+                const widget = window.DeliveryScheduler.initDeliveryScheduler('delivery-scheduler-widget', widgetConfig);
+                
+                // Handle widget events
+                if (widget && widget.on) {
+                    widget.on('POSTAL_CODE_VALIDATED', (event) => {
+                        console.log('Postal code validated:', event);
+                        if (event.payload.isValid) {
+                            document.getElementById('shipping-cost').textContent = `$${event.payload.area.deliveryFee.toFixed(2)}`;
+                            const total = 115.00 + event.payload.area.deliveryFee + 11.50;
+                            document.getElementById('total-cost').textContent = `$${total.toFixed(2)}`;
+                        }
+                    });
+                    
+                    widget.on('DELIVERY_DATE_SELECTED', (event) => {
+                        console.log('Delivery date selected:', event);
+                        document.getElementById('checkout-btn').disabled = false;
+                        // Update express fee in summary
+                        let expressFee = 0;
+                        if (event.payload.deliveryType === 'express' && event.payload.expressFee) {
+                            expressFee = event.payload.expressFee;
+                        }
+                        // Get base values
+                        const baseSubtotal = 214.98;
+                        const baseShipping = 8.99;
+                        const baseTax = 17.20;
+                        // Add express fee to shipping
+                        const shipping = baseShipping + expressFee;
+                        document.getElementById('shipping-cost').textContent = `$${shipping.toFixed(2)}`;
+                        // Update total
+                        const total = baseSubtotal + shipping + baseTax;
+                        document.getElementById('total-cost').textContent = `$${total.toFixed(2)}`;
+                        // Show/hide express fee row
+                        let expressRow = document.getElementById('express-fee-row');
+                        if (!expressRow) {
+                            expressRow = document.createElement('div');
+                            expressRow.className = 'summary-row';
+                            expressRow.id = 'express-fee-row';
+                            expressRow.innerHTML = `<span>Express Fee</span><span id="express-fee-value"></span>`;
+                            const shippingRow = document.querySelector('.summary-row:nth-child(3)');
+                            if (shippingRow && shippingRow.parentNode) {
+                                shippingRow.parentNode.insertBefore(expressRow, shippingRow.nextSibling);
+                            }
+                        }
+                        if (expressFee > 0) {
+                            expressRow.style.display = '';
+                            document.getElementById('express-fee-value').textContent = `+$${expressFee.toFixed(2)}`;
+                        } else {
+                            expressRow.style.display = 'none';
+                        }
+                    });
+                }
+                
+                console.log('Widget initialized successfully');
+            } else {
+                console.error('Widget not loaded');
+                console.log('Available globals:', Object.keys(window).filter(key => key.includes('Delivery')));
+                container.innerHTML = '<p style="color: red;">Error: Widget failed to load</p>';
+            }
+        });
+
+        // Handle checkout button click
+        document.getElementById('checkout-btn').addEventListener('click', () => {
+            alert('Proceeding to checkout...\n\nIn a real Shopify integration, this would:\n1. Update cart attributes with delivery info\n2. Redirect to checkout\n3. Pass delivery details to order processing');
+        });
+
+        // Simulate cart updates
+        document.querySelectorAll('.quantity-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                console.log('Cart quantity updated');
+            });
+        });
+    </script>
+</body>
+</html> 
