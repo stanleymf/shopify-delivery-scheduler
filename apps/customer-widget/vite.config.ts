@@ -11,11 +11,9 @@ export default defineConfig({
       formats: ['iife', 'es']
     },
     rollupOptions: {
-      external: ['react', 'react-dom'],
       output: {
         globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM'
+          // No external globals needed since we're bundling everything
         }
       }
     }
