@@ -74,7 +74,7 @@ function App() {
   const [error, setError] = useState<string>('');
   
   // Data states
-  const [deliveryAreas] = useState<DeliveryArea[]>([
+  const [deliveryAreas, setDeliveryAreas] = useState<DeliveryArea[]>([
     { id: 1, name: 'Central Singapore', deliveryFee: 8.99, minimumOrder: 30, estimatedDeliveryTime: '2-3 hours' },
     { id: 2, name: 'North Singapore', deliveryFee: 10.99, minimumOrder: 35, estimatedDeliveryTime: '3-4 hours' },
     { id: 3, name: 'East Singapore', deliveryFee: 9.99, minimumOrder: 30, estimatedDeliveryTime: '2-3 hours' },
@@ -120,6 +120,13 @@ function App() {
   const [blockedAreaCodes, setBlockedAreaCodes] = useState<string[]>([]);
   const [blockedPostalCodes, setBlockedPostalCodes] = useState<string[]>([]);
 
+  // Delivery area editing states
+  const [editingAreaId, setEditingAreaId] = useState<number | null>(null);
+  const [editingAreaData, setEditingAreaData] = useState<{deliveryFee: number, minimumOrder: number}>({
+    deliveryFee: 0,
+    minimumOrder: 0
+  });
+
   // Form states
   const [newLocation, setNewLocation] = useState({
     name: '', address1: '', address2: '', city: '', province: '', country: 'Singapore', zip: ''
@@ -137,7 +144,7 @@ function App() {
     name: '', deliveryType: 'standard' as const, minAdvanceHours: 24, maxAdvanceDays: 7, cutoffTime: '12:00'
   });
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const apiUrl = import.meta.env.VITE_API_URL || 'https://shopify-delivery-scheduler-production.up.railway.app';
 
   // Load data on component mount
   useEffect(() => {
@@ -399,6 +406,36 @@ function App() {
       'South Singapore': '24-28'
     };
     return areaMap[areaName] || 'Unknown';
+  };
+
+  // Delivery area editing functions
+  const startEditingArea = (area: DeliveryArea) => {
+    setEditingAreaId(area.id);
+    setEditingAreaData({
+      deliveryFee: area.deliveryFee,
+      minimumOrder: area.minimumOrder
+    });
+  };
+
+  const cancelEditingArea = () => {
+    setEditingAreaId(null);
+    setEditingAreaData({ deliveryFee: 0, minimumOrder: 0 });
+  };
+
+  const saveAreaChanges = () => {
+    if (editingAreaId === null) return;
+    
+    setDeliveryAreas(areas => 
+      areas.map(area => 
+        area.id === editingAreaId 
+          ? { ...area, deliveryFee: editingAreaData.deliveryFee, minimumOrder: editingAreaData.minimumOrder }
+          : area
+      )
+    );
+    
+    setEditingAreaId(null);
+    setEditingAreaData({ deliveryFee: 0, minimumOrder: 0 });
+    alert('Delivery area updated successfully!');
   };
 
   const tabs = [
@@ -908,7 +945,6 @@ function App() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Postal Codes</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Fee</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Min Order</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Time</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
@@ -919,11 +955,27 @@ function App() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {getAreaPostalCodes(area.name)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${area.deliveryFee}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {editingAreaId === area.id ? (
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={editingAreaData.deliveryFee}
+                                onChange={(e) => setEditingAreaData(prev => ({ ...prev, deliveryFee: parseFloat(e.target.value) || 0 }))}
+                                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                              />
+                            ) : (
+                              `$${area.deliveryFee}`
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${area.minimumOrder}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{area.estimatedDeliveryTime}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button className="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                            <button 
+                              onClick={() => startEditingArea(area)}
+                              className="text-blue-600 hover:text-blue-900 mr-3"
+                            >
+                              Edit
+                            </button>
                             <button className="text-red-600 hover:text-red-900">Delete</button>
                           </td>
                         </tr>
