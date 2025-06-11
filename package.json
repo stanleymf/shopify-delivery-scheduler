@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd apps/admin-dashboard && npm install && npm run build"
+    "build": "cd apps/admin-dashboard && pnpm install && pnpm run build"
   },
   "keywords": [],
   "author": "",
