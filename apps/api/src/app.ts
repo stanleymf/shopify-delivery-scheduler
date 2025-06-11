@@ -143,10 +143,42 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
-  credentials: true
-}));
+
+// CORS configuration - allow Shopify domains and configured origins
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+
+    // Allow configured origins
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow any Shopify domain
+    if (origin.endsWith('.myshopify.com') || origin.endsWith('.shopify.com')) {
+      return callback(null, true);
+    }
+
+    // Allow localhost for development
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+
+    // Allow Netlify domains (for admin dashboard and customer widget)
+    if (origin.endsWith('.netlify.app')) {
+      return callback(null, true);
+    }
+
+    callback(new Error('Not allowed by CORS'), false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Health check endpoint
