@@ -1,2 +1,4 @@
-# Force Railway to use Dockerfile instead of Nixpacks
+# Force Railway to use Nixpacks instead of Dockerfile
+Dockerfile*
+.dockerignore
 # This file tells Railway to ignore Nixpacks and use our custom Dockerfile 
