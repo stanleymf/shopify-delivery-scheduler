@@ -1,0 +1,10 @@
+32990ae Current working version - Full featured admin dashboard with notification system and express timeslots
+ed72dcb Add v1.0.0 backup: shopify-delivery-scheduler-v1 with complete build files and documentation
+2b8f97e Fix all TypeScript any errors, ensure strict types, and clean up for production deployment
+2d90e36 Fix white screen issue: Add notification system and replace browser alerts with modern toast notifications
+b053609 Fix TypeScript errors and deploy admin dashboard with express timeslots safety checks
+19e1132 feat: add delivery area editing infrastructure and partial table updates
+fc02def feat: comprehensive Singapore postal code management with validation and bulk blocking
+4f234a9 Implement complete comprehensive admin dashboard with all missing modules - Dashboard Overview with statistics and quick actions - Product Management for creating and managing product types - Timeslot Management for configuring delivery time rules - Availability Calendar with visual weekly schedule - Advance Order Rules for booking constraints - Express Delivery premium timeslot management - Collection Locations pickup point management - Text Customizations UI label management - System Settings API status and information
+f8b9994 Implement comprehensive admin dashboard with multiple management modules - Add delivery areas management with fees and delivery times - Add express delivery timeslots with premium fee management - Add collection locations creation and management interface - Enhance text customizations with better UI - Add system settings and API status monitoring - Modern tabbed interface with Tailwind CSS styling - Full integration with existing API endpoints
+20d7322 Add shopify-tag-manager to .gitignore - Prevent accidental commits of separate project - This is not part of the delivery scheduler system
