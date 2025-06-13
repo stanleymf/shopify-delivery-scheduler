@@ -165,7 +165,7 @@ export const useDataPersistence = (props: DataPersistenceProps) => {
   const isInitialLoadComplete = useRef(false);
 
   // Helper function to make API calls
-  const apiCall = useCallback(async (endpoint: string, method: 'GET' | 'POST' = 'GET', data?: any) => {
+  const apiCall = useCallback(async <T = unknown>(endpoint: string, method: 'GET' | 'POST' = 'GET', data?: T) => {
     try {
       const response = await fetch(`${API_URL}${endpoint}`, {
         method,

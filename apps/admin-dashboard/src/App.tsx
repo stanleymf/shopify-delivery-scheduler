@@ -71,6 +71,18 @@ type TextCustomizations = {
   postalCode: string;
 };
 
+type PostalCodeResult = {
+  isValid: boolean;
+  error?: string;
+  deliveryArea?: {
+    name?: string;
+    deliveryFee?: number;
+    minimumOrder?: number;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+};
+
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(false);
@@ -117,7 +129,7 @@ function App() {
 
   // Postal code management states
   const [testPostalCode, setTestPostalCode] = useState('');
-  const [postalCodeResult, setPostalCodeResult] = useState<any>(null);
+  const [postalCodeResult, setPostalCodeResult] = useState<PostalCodeResult | null>(null);
   const [areaCodeInput, setAreaCodeInput] = useState('');
   const [bulkPostalInput, setBulkPostalInput] = useState('');
   const [blockedAreaCodes, setBlockedAreaCodes] = useState<string[]>([]);
@@ -135,16 +147,16 @@ function App() {
     name: '', address1: '', address2: '', city: '', province: '', country: 'Singapore', zip: ''
   });
 
-  const [newProduct, setNewProduct] = useState({
-    name: '', deliveryType: 'standard' as const, minAdvanceHours: 24, maxAdvanceDays: 7
+  const [newProduct, setNewProduct] = useState<{ name: string; deliveryType: 'standard' | 'express' | 'collection'; minAdvanceHours: number; maxAdvanceDays: number; }>({
+    name: '', deliveryType: 'standard', minAdvanceHours: 24, maxAdvanceDays: 7
   });
 
-  const [newTimeslotRule, setNewTimeslotRule] = useState({
-    dayOfWeek: 1, startTime: '09:00', endTime: '17:00', maxSlots: 10, deliveryType: 'standard' as const
+  const [newTimeslotRule, setNewTimeslotRule] = useState<{ dayOfWeek: number; startTime: string; endTime: string; maxSlots: number; deliveryType: 'standard' | 'express'; }>({
+    dayOfWeek: 1, startTime: '09:00', endTime: '17:00', maxSlots: 10, deliveryType: 'standard'
   });
 
-  const [newAdvanceRule, setNewAdvanceRule] = useState({
-    name: '', deliveryType: 'standard' as const, minAdvanceHours: 24, maxAdvanceDays: 7, cutoffTime: '12:00'
+  const [newAdvanceRule, setNewAdvanceRule] = useState<{ name: string; deliveryType: 'standard' | 'express' | 'collection'; minAdvanceHours: number; maxAdvanceDays: number; cutoffTime: string; }>({
+    name: '', deliveryType: 'standard', minAdvanceHours: 24, maxAdvanceDays: 7, cutoffTime: '12:00'
   });
 
   const apiUrl = import.meta.env.VITE_API_URL || 'https://shopify-delivery-scheduler-production.up.railway.app';
@@ -442,6 +454,9 @@ function App() {
     { id: 'settings', label: 'Settings', icon: '⚙️' }
   ];
 
+  // Helper to safely stringify unknown values for React rendering
+  const safeString = (val: unknown) => (val !== undefined && val !== null ? String(val) : '');
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -637,7 +652,7 @@ function App() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Type</label>
                       <select
                         value={newProduct.deliveryType}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, deliveryType: e.target.value as any }))}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, deliveryType: e.target.value as 'standard' | 'express' | 'collection' }))}
                         className="w-full border border-gray-300 rounded-md px-3 py-2"
                       >
                         <option value="standard">Standard</option>
@@ -763,11 +778,11 @@ function App() {
                       <p className={`font-medium ${postalCodeResult.isValid ? 'text-green-800' : 'text-red-800'}`}>
                         {postalCodeResult.isValid ? '✓ Valid postal code' : '✗ Invalid postal code'}
                       </p>
-                      {postalCodeResult.deliveryArea && (
+                      {postalCodeResult.deliveryArea && typeof postalCodeResult.deliveryArea === 'object' && (
                         <div className="mt-2 text-sm text-gray-600">
-                          <p>Area: {postalCodeResult.deliveryArea.name}</p>
-                          <p>Delivery Fee: ${postalCodeResult.deliveryArea.deliveryFee}</p>
-                          <p>Minimum Order: ${postalCodeResult.deliveryArea.minimumOrder}</p>
+                          <p>Area: {safeString('name' in postalCodeResult.deliveryArea ? (postalCodeResult.deliveryArea as { name?: unknown }).name : undefined) as string}</p>
+                          <p>Delivery Fee: ${safeString('deliveryFee' in postalCodeResult.deliveryArea ? (postalCodeResult.deliveryArea as { deliveryFee?: unknown }).deliveryFee : undefined) as string}</p>
+                          <p>Minimum Order: ${safeString('minimumOrder' in postalCodeResult.deliveryArea ? (postalCodeResult.deliveryArea as { minimumOrder?: unknown }).minimumOrder : undefined) as string}</p>
                         </div>
                       )}
                       {postalCodeResult.error && (
@@ -1087,7 +1102,7 @@ function App() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Type</label>
                       <select
                         value={newTimeslotRule.deliveryType}
-                        onChange={(e) => setNewTimeslotRule(prev => ({ ...prev, deliveryType: e.target.value as any }))}
+                        onChange={(e) => setNewTimeslotRule(prev => ({ ...prev, deliveryType: e.target.value as 'standard' | 'express' }))}
                         className="w-full border border-gray-300 rounded-md px-3 py-2"
                       >
                         <option value="standard">Standard</option>
@@ -1219,7 +1234,7 @@ function App() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Type</label>
                       <select
                         value={newAdvanceRule.deliveryType}
-                        onChange={(e) => setNewAdvanceRule(prev => ({ ...prev, deliveryType: e.target.value as any }))}
+                        onChange={(e) => setNewAdvanceRule(prev => ({ ...prev, deliveryType: e.target.value as 'standard' | 'express' | 'collection' }))}
                         className="w-full border border-gray-300 rounded-md px-3 py-2"
                       >
                         <option value="standard">Standard</option>
@@ -1514,7 +1529,7 @@ function App() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Express timeslots:</span>
-                        <span className="font-medium">{expressTimeslots.length}</span>
+                        <span className="font-mono">{expressTimeslots.length}</span>
                       </div>
                     </div>
                   </div>
