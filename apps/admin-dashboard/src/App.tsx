@@ -71,18 +71,6 @@ type TextCustomizations = {
   postalCode: string;
 };
 
-type PostalCodeResult = {
-  isValid: boolean;
-  error?: string;
-  deliveryArea?: {
-    name?: string;
-    deliveryFee?: number;
-    minimumOrder?: number;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-};
-
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(false);
@@ -129,7 +117,7 @@ function App() {
 
   // Postal code management states
   const [testPostalCode, setTestPostalCode] = useState('');
-  const [postalCodeResult, setPostalCodeResult] = useState<PostalCodeResult | null>(null);
+  const [postalCodeResult, setPostalCodeResult] = useState<any>(null);
   const [areaCodeInput, setAreaCodeInput] = useState('');
   const [bulkPostalInput, setBulkPostalInput] = useState('');
   const [blockedAreaCodes, setBlockedAreaCodes] = useState<string[]>([]);
@@ -147,16 +135,16 @@ function App() {
     name: '', address1: '', address2: '', city: '', province: '', country: 'Singapore', zip: ''
   });
 
-  const [newProduct, setNewProduct] = useState<{ name: string; deliveryType: 'standard' | 'express' | 'collection'; minAdvanceHours: number; maxAdvanceDays: number; }>({
-    name: '', deliveryType: 'standard', minAdvanceHours: 24, maxAdvanceDays: 7
+  const [newProduct, setNewProduct] = useState({
+    name: '', deliveryType: 'standard' as const, minAdvanceHours: 24, maxAdvanceDays: 7
   });
 
-  const [newTimeslotRule, setNewTimeslotRule] = useState<{ dayOfWeek: number; startTime: string; endTime: string; maxSlots: number; deliveryType: 'standard' | 'express'; }>({
-    dayOfWeek: 1, startTime: '09:00', endTime: '17:00', maxSlots: 10, deliveryType: 'standard'
+  const [newTimeslotRule, setNewTimeslotRule] = useState({
+    dayOfWeek: 1, startTime: '09:00', endTime: '17:00', maxSlots: 10, deliveryType: 'standard' as const
   });
 
-  const [newAdvanceRule, setNewAdvanceRule] = useState<{ name: string; deliveryType: 'standard' | 'express' | 'collection'; minAdvanceHours: number; maxAdvanceDays: number; cutoffTime: string; }>({
-    name: '', deliveryType: 'standard', minAdvanceHours: 24, maxAdvanceDays: 7, cutoffTime: '12:00'
+  const [newAdvanceRule, setNewAdvanceRule] = useState({
+    name: '', deliveryType: 'standard' as const, minAdvanceHours: 24, maxAdvanceDays: 7, cutoffTime: '12:00'
   });
 
   const apiUrl = import.meta.env.VITE_API_URL || 'https://shopify-delivery-scheduler-production.up.railway.app';
@@ -454,9 +442,6 @@ function App() {
     { id: 'settings', label: 'Settings', icon: '⚙️' }
   ];
 
-  // Helper to safely stringify unknown values for React rendering
-  const safeString = (val: unknown) => (val !== undefined && val !== null ? String(val) : '');
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -639,7 +624,7 @@ function App() {
                   <form onSubmit={handleCreateProduct} className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                      <input
+            <input
                         type="text"
                         value={newProduct.name}
                         onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
@@ -652,7 +637,7 @@ function App() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Type</label>
                       <select
                         value={newProduct.deliveryType}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, deliveryType: e.target.value as 'standard' | 'express' | 'collection' }))}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, deliveryType: e.target.value as any }))}
                         className="w-full border border-gray-300 rounded-md px-3 py-2"
                       >
                         <option value="standard">Standard</option>
@@ -662,7 +647,7 @@ function App() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Min Advance Hours</label>
-                      <input
+            <input
                         type="number"
                         value={newProduct.minAdvanceHours}
                         onChange={(e) => setNewProduct(prev => ({ ...prev, minAdvanceHours: parseInt(e.target.value) }))}
@@ -681,13 +666,13 @@ function App() {
                       />
                     </div>
                     <div className="md:col-span-3">
-                      <button
+                    <button
                         type="submit"
                         className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
                       >
                         Create Product
-                      </button>
-                    </div>
+                    </button>
+                  </div>
                   </form>
                 </div>
 
@@ -710,37 +695,37 @@ function App() {
                           <tr key={product.id}>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {product.name}
-                            </td>
+                              </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
                               {product.deliveryType}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {product.minAdvanceHours}h
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {product.maxAdvanceDays}d
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                               }`}>
                                 {product.isActive ? 'Active' : 'Inactive'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <button 
+                                    </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button
                                 onClick={() => toggleProductStatus(product.id)}
                                 className="text-blue-600 hover:text-blue-900 mr-3"
-                              >
+                                    >
                                 {product.isActive ? 'Deactivate' : 'Activate'}
-                              </button>
+            </button>
                               <button className="text-red-600 hover:text-red-900">Delete</button>
-                            </td>
-                          </tr>
+                              </td>
+                            </tr>
                         ))}
                       </tbody>
                     </table>
-                  </div>
+        </div>
                 </div>
               </div>
             )}
@@ -778,11 +763,11 @@ function App() {
                       <p className={`font-medium ${postalCodeResult.isValid ? 'text-green-800' : 'text-red-800'}`}>
                         {postalCodeResult.isValid ? '✓ Valid postal code' : '✗ Invalid postal code'}
                       </p>
-                      {postalCodeResult.deliveryArea && typeof postalCodeResult.deliveryArea === 'object' && (
+                      {postalCodeResult.deliveryArea && (
                         <div className="mt-2 text-sm text-gray-600">
-                          <p>Area: {safeString('name' in postalCodeResult.deliveryArea ? (postalCodeResult.deliveryArea as { name?: unknown }).name : undefined) as string}</p>
-                          <p>Delivery Fee: ${safeString('deliveryFee' in postalCodeResult.deliveryArea ? (postalCodeResult.deliveryArea as { deliveryFee?: unknown }).deliveryFee : undefined) as string}</p>
-                          <p>Minimum Order: ${safeString('minimumOrder' in postalCodeResult.deliveryArea ? (postalCodeResult.deliveryArea as { minimumOrder?: unknown }).minimumOrder : undefined) as string}</p>
+                          <p>Area: {postalCodeResult.deliveryArea.name}</p>
+                          <p>Delivery Fee: ${postalCodeResult.deliveryArea.deliveryFee}</p>
+                          <p>Minimum Order: ${postalCodeResult.deliveryArea.minimumOrder}</p>
                         </div>
                       )}
                       {postalCodeResult.error && (
@@ -800,7 +785,7 @@ function App() {
                   <div className="mb-6">
                     <h4 className="font-medium mb-2">Block by Area Codes (First 2 digits)</h4>
                     <div className="flex gap-2 mb-3">
-                      <input
+                  <input
                         type="text"
                         placeholder="e.g., 01,02,03 or 09-13"
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
@@ -963,8 +948,8 @@ function App() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {editingAreaId === area.id ? (
-                              <input
-                                type="number"
+                  <input
+                    type="number"
                                 step="0.01"
                                 value={editingAreaData.deliveryFee}
                                 onChange={(e) => setEditingAreaData(prev => ({ ...prev, deliveryFee: parseFloat(e.target.value) || 0 }))}
@@ -976,19 +961,19 @@ function App() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${area.minimumOrder}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button 
-                              onClick={() => startEditingArea(area)}
-                              className="text-blue-600 hover:text-blue-900 mr-3"
-                            >
-                              Edit
-                            </button>
-                            <button className="text-red-600 hover:text-red-900">Delete</button>
+                  <button
+                                  onClick={() => startEditingArea(area)}
+                                  className="text-blue-600 hover:text-blue-900 mr-3"
+                  >
+                    Edit
+                  </button>
+                                <button className="text-red-600 hover:text-red-900">Delete</button>
                           </td>
                         </tr>
-                      ))}
+          ))}
                     </tbody>
                   </table>
-                </div>
+      </div>
               </div>
             )}
 
@@ -1000,16 +985,16 @@ function App() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Type Label</label>
-                      <input
+            <input
                         type="text"
                         value={textCustomizations.deliveryType}
                         onChange={(e) => setTextCustomizations(prev => ({ ...prev, deliveryType: e.target.value }))}
                         className="w-full border border-gray-300 rounded-md px-3 py-2"
                       />
-                    </div>
+        </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Date Label</label>
-                      <input
+                <input
                         type="text"
                         value={textCustomizations.deliveryDate}
                         onChange={(e) => setTextCustomizations(prev => ({ ...prev, deliveryDate: e.target.value }))}
@@ -1018,7 +1003,7 @@ function App() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Timeslot Label</label>
-                      <input
+                <input
                         type="text"
                         value={textCustomizations.timeslot}
                         onChange={(e) => setTextCustomizations(prev => ({ ...prev, timeslot: e.target.value }))}
@@ -1027,7 +1012,7 @@ function App() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code Label</label>
-                      <input
+                <input
                         type="text"
                         value={textCustomizations.postalCode}
                         onChange={(e) => setTextCustomizations(prev => ({ ...prev, postalCode: e.target.value }))}
@@ -1035,14 +1020,14 @@ function App() {
                       />
                     </div>
                   </div>
-                  <button
+                <button
                     onClick={handleSaveTextCustomizations}
                     className="mt-6 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
                   >
                     Save Changes
-                  </button>
-                </div>
+                </button>
               </div>
+            </div>
             )}
 
             {/* Timeslot Management Tab */}
@@ -1054,12 +1039,12 @@ function App() {
                 <div className="bg-gray-50 rounded-lg p-6 mb-8">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Timeslot Rule</h3>
                   <form onSubmit={handleCreateTimeslotRule} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
+                      <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Day of Week</label>
                       <select
                         value={newTimeslotRule.dayOfWeek}
                         onChange={(e) => setNewTimeslotRule(prev => ({ ...prev, dayOfWeek: parseInt(e.target.value) }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                          className="w-full border border-gray-300 rounded-md px-3 py-2"
                       >
                         <option value={1}>Monday</option>
                         <option value={2}>Tuesday</option>
@@ -1069,109 +1054,109 @@ function App() {
                         <option value={6}>Saturday</option>
                         <option value={0}>Sunday</option>
                       </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
                       <input
                         type="time"
                         value={newTimeslotRule.startTime}
                         onChange={(e) => setNewTimeslotRule(prev => ({ ...prev, startTime: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
                       <input
                         type="time"
                         value={newTimeslotRule.endTime}
                         onChange={(e) => setNewTimeslotRule(prev => ({ ...prev, endTime: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Slots</label>
+                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Max Slots</label>
                       <input
                         type="number"
                         value={newTimeslotRule.maxSlots}
                         onChange={(e) => setNewTimeslotRule(prev => ({ ...prev, maxSlots: parseInt(e.target.value) }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
-                        min="1"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Type</label>
-                      <select
+                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                          min="1"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Type</label>
+                        <select
                         value={newTimeslotRule.deliveryType}
-                        onChange={(e) => setNewTimeslotRule(prev => ({ ...prev, deliveryType: e.target.value as 'standard' | 'express' }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
-                      >
+                        onChange={(e) => setNewTimeslotRule(prev => ({ ...prev, deliveryType: e.target.value as any }))}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        >
                         <option value="standard">Standard</option>
                         <option value="express">Express</option>
-                      </select>
-                    </div>
-                    <div>
+                        </select>
+                      </div>
+                      <div>
                       <button
-                        type="submit"
+                          type="submit"
                         className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 mt-6"
-                      >
+                        >
                         Create Rule
                       </button>
-                    </div>
-                  </form>
-                </div>
+                      </div>
+                    </form>
+                  </div>
 
                 {/* Timeslot Rules List */}
-                <div className="bg-white rounded-lg border border-gray-200">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
+                  <div className="bg-white rounded-lg border border-gray-200">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Day</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Range</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Slots</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Range</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Slots</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
                         {timeslotRules.map((rule) => (
                           <tr key={rule.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {getDayName(rule.dayOfWeek)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {rule.startTime} - {rule.endTime}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {rule.maxSlots}
-                            </td>
+                                </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
                               {rule.deliveryType}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 rule.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                              }`}>
+                                  }`}>
                                 {rule.isActive ? 'Active' : 'Inactive'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <button 
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
                                 onClick={() => toggleTimeslotRuleStatus(rule.id)}
-                                className="text-blue-600 hover:text-blue-900 mr-3"
-                              >
+                                    className="text-blue-600 hover:text-blue-900 mr-3"
+                                  >
                                 {rule.isActive ? 'Deactivate' : 'Activate'}
-                              </button>
-                              <button className="text-red-600 hover:text-red-900">Delete</button>
-                            </td>
-                          </tr>
+                      </button>
+                                  <button className="text-red-600 hover:text-red-900">Delete</button>
+                                </td>
+                              </tr>
                         ))}
-                      </tbody>
-                    </table>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
-              </div>
             )}
 
             {/* Availability Calendar Tab */}
@@ -1186,12 +1171,12 @@ function App() {
                         <div className={`h-20 border-2 rounded-lg ${index === 0 || index === 6 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'} flex items-center justify-center`}>
                           <div className="text-xs">
                             {timeslotRules.filter(r => r.dayOfWeek === index && r.isActive).length} rules
-                          </div>
-                        </div>
+                    </div>
+                      </div>
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="border-t pt-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Overview</h3>
                     <div className="space-y-2">
@@ -1202,149 +1187,149 @@ function App() {
                             {timeslotRules.filter(r => r.dayOfWeek === dayIndex && r.isActive).length} active rules, 
                             {timeslotRules.filter(r => r.dayOfWeek === dayIndex && r.isActive).reduce((sum, r) => sum + r.maxSlots, 0)} total slots
                           </span>
-                        </div>
-                      ))}
+                              </div>
+                            ))}
+                              </div>
+                              </div>
+                              </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
+                  )}
 
             {/* Advance Order Rules Tab */}
             {activeTab === 'advance-rules' && (
-              <div>
+                      <div>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-6">Advance Order Rules</h2>
                 
                 {/* Add New Advance Rule Form */}
                 <div className="bg-gray-50 rounded-lg p-6 mb-8">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Advance Order Rule</h3>
                   <form onSubmit={handleCreateAdvanceRule} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
+                        <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Rule Name</label>
-                      <input
-                        type="text"
+                        <input
+                          type="text"
                         value={newAdvanceRule.name}
                         onChange={(e) => setNewAdvanceRule(prev => ({ ...prev, name: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                          className="w-full border border-gray-300 rounded-md px-3 py-2"
                         placeholder="Express Flower Rule"
-                        required
-                      />
-                    </div>
-                    <div>
+                          required
+                        />
+                      </div>
+                      <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Type</label>
-                      <select
+                        <select
                         value={newAdvanceRule.deliveryType}
-                        onChange={(e) => setNewAdvanceRule(prev => ({ ...prev, deliveryType: e.target.value as 'standard' | 'express' | 'collection' }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
-                      >
+                        onChange={(e) => setNewAdvanceRule(prev => ({ ...prev, deliveryType: e.target.value as any }))}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        >
                         <option value="standard">Standard</option>
                         <option value="express">Express</option>
                         <option value="collection">Collection</option>
-                      </select>
-                    </div>
-                    <div>
+                        </select>
+                      </div>
+                      <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Min Advance Hours</label>
-                      <input
-                        type="number"
+                          <input
+                            type="number"
                         value={newAdvanceRule.minAdvanceHours}
                         onChange={(e) => setNewAdvanceRule(prev => ({ ...prev, minAdvanceHours: parseInt(e.target.value) }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
-                        min="1"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2"
+                            min="1"
                       />
-                    </div>
-                    <div>
+                        </div>
+                      <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Max Advance Days</label>
-                      <input
-                        type="number"
+                            <input
+                              type="number"
                         value={newAdvanceRule.maxAdvanceDays}
                         onChange={(e) => setNewAdvanceRule(prev => ({ ...prev, maxAdvanceDays: parseInt(e.target.value) }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
-                        min="1"
-                      />
-                    </div>
-                    <div>
+                              className="w-full border border-gray-300 rounded-md px-3 py-2"
+                              min="1"
+                            />
+                          </div>
+                          <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Cutoff Time</label>
-                      <input
-                        type="time"
+                            <input
+                              type="time"
                         value={newAdvanceRule.cutoffTime}
                         onChange={(e) => setNewAdvanceRule(prev => ({ ...prev, cutoffTime: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
-                      />
-                    </div>
-                    <div>
-                      <button
-                        type="submit"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2"
+                            />
+                          </div>
+                          <div>
+                          <button
+                            type="submit"
                         className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 mt-6"
-                      >
+                          >
                         Create Rule
-                      </button>
-                    </div>
-                  </form>
-                </div>
+                          </button>
+                        </div>
+                      </form>
+                  </div>
 
                 {/* Advance Rules List */}
-                <div className="bg-white rounded-lg border border-gray-200">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
+                  <div className="bg-white rounded-lg border border-gray-200">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rule Name</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Type</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Min Advance</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Advance</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cutoff Time</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
                         {advanceOrderRules.map((rule) => (
                           <tr key={rule.id}>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {rule.name}
-                            </td>
+                    </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
                               {rule.deliveryType}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {rule.minAdvanceHours}h
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {rule.maxAdvanceDays}d
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {rule.cutoffTime}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 rule.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                              }`}>
+                                  }`}>
                                 {rule.isActive ? 'Active' : 'Inactive'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <button 
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
                                 onClick={() => toggleAdvanceRuleStatus(rule.id)}
                                 className="text-blue-600 hover:text-blue-900 mr-3"
                               >
                                 {rule.isActive ? 'Deactivate' : 'Activate'}
-                              </button>
+                                    </button>
                               <button className="text-red-600 hover:text-red-900">Delete</button>
-                            </td>
-                          </tr>
+                                </td>
+                              </tr>
                         ))}
-                      </tbody>
-                    </table>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
+                              </div>
+                            )}
 
             {/* Express Delivery Tab */}
             {activeTab === 'express-delivery' && (
               <div>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-6">Express Delivery Management</h2>
-                <div className="bg-white rounded-lg border border-gray-200">
+                  <div className="bg-white rounded-lg border border-gray-200">
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
@@ -1369,7 +1354,7 @@ function App() {
                                 slot.fee === 0 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                               }`}>
                                 {slot.fee === 0 ? 'Standard' : 'Premium'}
-                              </span>
+                                      </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
@@ -1379,13 +1364,13 @@ function App() {
                         ))}
                       </tbody>
                     </table>
-                  </div>
-                </div>
+                                    </div>
+                                      </div>
                 <button className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
                   Add New Timeslot
-                </button>
-              </div>
-            )}
+                          </button>
+                  </div>
+                        )}
 
             {/* Collection Locations Tab */}
             {activeTab === 'locations' && (
@@ -1396,90 +1381,90 @@ function App() {
                 <div className="bg-gray-50 rounded-lg p-6 mb-8">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Location</h3>
                   <form onSubmit={handleCreateLocation} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                            <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
-                      <input
-                        type="text"
+                <input
+                  type="text"
                         value={newLocation.name}
                         onChange={(e) => setNewLocation(prev => ({ ...prev, name: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                                className="w-full border border-gray-300 rounded-md px-3 py-2"
                         placeholder="Main Store"
-                        required
-                      />
-                    </div>
-                    <div>
+                                required
+                              />
+                            </div>
+                            <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 1</label>
-                      <input
+                              <input
                         type="text"
                         value={newLocation.address1}
                         onChange={(e) => setNewLocation(prev => ({ ...prev, address1: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                                className="w-full border border-gray-300 rounded-md px-3 py-2"
                         placeholder="123 Main Street"
-                        required
-                      />
-                    </div>
-                    <div>
+                                required
+                              />
+                            </div>
+                            <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 2</label>
-                      <input
+                              <input
                         type="text"
                         value={newLocation.address2}
                         onChange={(e) => setNewLocation(prev => ({ ...prev, address2: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                                className="w-full border border-gray-300 rounded-md px-3 py-2"
                         placeholder="Unit #01-01"
-                      />
-                    </div>
-                    <div>
+                              />
+                            </div>
+                            <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                      <input
+                              <input
                         type="text"
                         value={newLocation.city}
                         onChange={(e) => setNewLocation(prev => ({ ...prev, city: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                                className="w-full border border-gray-300 rounded-md px-3 py-2"
                         placeholder="Singapore"
-                        required
-                      />
-                    </div>
-                    <div>
+                                required
+                              />
+                            </div>
+                            <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Province</label>
-                      <input
+                              <input
                         type="text"
                         value={newLocation.province}
                         onChange={(e) => setNewLocation(prev => ({ ...prev, province: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                                className="w-full border border-gray-300 rounded-md px-3 py-2"
                         placeholder="Singapore"
-                      />
-                    </div>
-                    <div>
+                              />
+                            </div>
+                            <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
-                      <input
+                              <input
                         type="text"
                         value={newLocation.zip}
                         onChange={(e) => setNewLocation(prev => ({ ...prev, zip: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                                className="w-full border border-gray-300 rounded-md px-3 py-2"
                         placeholder="123456"
-                        required
-                      />
-                    </div>
+                              required
+                            />
+                          </div>
                     <div className="md:col-span-2">
-                      <button
-                        type="submit"
+                <button
+                            type="submit"
                         className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-                      >
+                          >
                         Create Location
-                      </button>
+                </button>
                     </div>
-                  </form>
-                </div>
+                        </form>
+                      </div>
 
                 {/* Existing Locations */}
-                <div className="space-y-4">
+                      <div className="space-y-4">
                   {locations.length === 0 ? (
                     <p className="text-gray-500 text-center py-8">No collection locations configured yet.</p>
                   ) : (
                     locations.map((location) => (
                       <div key={location.id} className="bg-white rounded-lg border border-gray-200 p-6">
                         <div className="flex justify-between items-start">
-                          <div>
+                                      <div>
                             <h3 className="text-lg font-semibold text-gray-900">{location.name}</h3>
                             <p className="text-gray-600 mt-1">
                               {location.address.address1}
@@ -1489,7 +1474,7 @@ function App() {
                               {location.address.city}, {location.address.province} {location.address.zip}
                             </p>
                             <p className="text-gray-600">{location.address.country}</p>
-                          </div>
+                            </div>
                           <div className="flex items-center space-x-3">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                               location.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -1498,8 +1483,8 @@ function App() {
                             </span>
                             <button className="text-blue-600 hover:text-blue-900">Edit</button>
                           </div>
-                        </div>
-                      </div>
+                            </div>
+                          </div>
                     ))
                   )}
                 </div>
@@ -1518,7 +1503,7 @@ function App() {
                       <div className="flex justify-between">
                         <span className="text-gray-600">API URL:</span>
                         <span className="font-mono text-sm">{apiUrl}</span>
-                      </div>
+        </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Status:</span>
                         <span className="text-green-600 font-medium">Connected</span>
@@ -1529,7 +1514,7 @@ function App() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Express timeslots:</span>
-                        <span className="font-mono">{expressTimeslots.length}</span>
+                        <span className="font-medium">{expressTimeslots.length}</span>
                       </div>
                     </div>
                   </div>
@@ -1569,7 +1554,7 @@ function App() {
             )}
           </div>
         </div>
-      </div>
+        </div>
 
       {/* Notification Components */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
@@ -1595,8 +1580,8 @@ function App() {
         onConfirm={confirmDialog.onConfirm}
         onCancel={confirmDialog.onCancel}
       />
-    </div>
-  );
-}
+      </div>
+    );
+  }
 
-export default App; 
+export default App;
