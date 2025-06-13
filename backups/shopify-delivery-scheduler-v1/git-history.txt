@@ -1,0 +1,5 @@
+2b8f97e Fix all TypeScript any errors, ensure strict types, and clean up for production deployment
+2d90e36 Fix white screen issue: Add notification system and replace browser alerts with modern toast notifications
+b053609 Fix TypeScript errors and deploy admin dashboard with express timeslots safety checks
+19e1132 feat: add delivery area editing infrastructure and partial table updates
+fc02def feat: comprehensive Singapore postal code management with validation and bulk blocking
