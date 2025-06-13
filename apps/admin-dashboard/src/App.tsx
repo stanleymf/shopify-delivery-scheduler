@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNotifications } from "./hooks/useNotifications";
+import { Toast } from "./components/Toast";
+import { ConfirmModal } from "./components/ConfirmModal";
 
 // Types
 type DeliveryArea = {
@@ -146,6 +149,15 @@ function App() {
 
   const apiUrl = import.meta.env.VITE_API_URL || 'https://shopify-delivery-scheduler-production.up.railway.app';
 
+  // Initialize notifications system
+  const { 
+    toasts, 
+    confirmDialog, 
+    showSuccess, 
+    showError, 
+    removeToast
+  } = useNotifications();
+
   // Load data on component mount
   useEffect(() => {
     loadAllData();
@@ -227,12 +239,12 @@ function App() {
         setNewLocation({
           name: '', address1: '', address2: '', city: '', province: '', country: 'Singapore', zip: ''
         });
-        alert('Location created successfully!');
+        showSuccess('Location Created!', 'The new location has been added successfully.');
       } else {
-        alert('Failed to create location');
+        showError('Failed to Create Location', 'Please check the form and try again.');
       }
     } catch (err) {
-      alert('Error creating location');
+      showError('Error Creating Location', 'An unexpected error occurred. Please try again.');
       console.error('Error creating location:', err);
     }
   };
@@ -249,7 +261,7 @@ function App() {
     };
     setProducts([...products, product]);
     setNewProduct({ name: '', deliveryType: 'standard', minAdvanceHours: 24, maxAdvanceDays: 7 });
-    alert('Product created successfully!');
+    showSuccess('Product Created!', `"${product.name}" has been added successfully.`);
   };
 
   const handleCreateTimeslotRule = (e: React.FormEvent) => {
@@ -265,7 +277,7 @@ function App() {
     };
     setTimeslotRules([...timeslotRules, rule]);
     setNewTimeslotRule({ dayOfWeek: 1, startTime: '09:00', endTime: '17:00', maxSlots: 10, deliveryType: 'standard' });
-    alert('Timeslot rule created successfully!');
+    showSuccess('Timeslot Rule Created!', `New ${rule.deliveryType} rule for ${getDayName(rule.dayOfWeek)} has been added.`);
   };
 
   const handleCreateAdvanceRule = (e: React.FormEvent) => {
@@ -281,7 +293,7 @@ function App() {
     };
     setAdvanceOrderRules([...advanceOrderRules, rule]);
     setNewAdvanceRule({ name: '', deliveryType: 'standard', minAdvanceHours: 24, maxAdvanceDays: 7, cutoffTime: '12:00' });
-    alert('Advance order rule created successfully!');
+    showSuccess('Advance Rule Created!', `"${rule.name}" has been added successfully.`);
   };
 
   const handleSaveTextCustomizations = async () => {
@@ -1543,6 +1555,31 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Notification Components */}
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {toasts.map((toast) => (
+          <Toast
+            key={toast.id}
+            id={toast.id}
+            type={toast.type}
+            title={toast.title}
+            message={toast.message}
+            duration={toast.duration}
+            onClose={removeToast}
+          />
+        ))}
+      </div>
+      <ConfirmModal
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.config.title}
+        message={confirmDialog.config.message}
+        confirmText={confirmDialog.config.confirmText}
+        cancelText={confirmDialog.config.cancelText}
+        type={confirmDialog.config.type}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={confirmDialog.onCancel}
+      />
     </div>
   );
 }
