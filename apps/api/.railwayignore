@@ -2,3 +2,20 @@
 Dockerfile*
 .dockerignore
 # This file tells Railway to ignore Nixpacks and use our custom Dockerfile 
+
+# Ignore node_modules
+node_modules/
+
+# Don't ignore build artifacts - Railway needs the dist folder
+# dist/
+
+# Ignore logs
+*.log
+
+# Ignore environment files
+.env.local
+.env.production
+
+# Ignore temporary files
+.DS_Store
+*.tmp 

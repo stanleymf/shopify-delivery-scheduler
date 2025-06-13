@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { db } from './database';
 
 dotenv.config();
 
@@ -214,42 +215,42 @@ const mockDeliveryAreas: DeliveryAreaResponse[] = [
   {
     id: 1,
     name: 'Central Singapore',
-    deliveryFee: 8.99,
-    minimumOrder: 30,
+    deliveryFee: 0,
+    minimumOrder: 0,
     estimatedDeliveryTime: '2-3 hours'
   },
   {
     id: 2,
     name: 'North Singapore',
-    deliveryFee: 10.99,
-    minimumOrder: 35,
+    deliveryFee: 0,
+    minimumOrder: 0,
     estimatedDeliveryTime: '3-4 hours'
   },
   {
     id: 3,
     name: 'East Singapore',
-    deliveryFee: 9.99,
-    minimumOrder: 30,
+    deliveryFee: 0,
+    minimumOrder: 0,
     estimatedDeliveryTime: '2-3 hours'
   },
   {
     id: 4,
     name: 'West Singapore',
-    deliveryFee: 11.99,
-    minimumOrder: 40,
+    deliveryFee: 0,
+    minimumOrder: 0,
     estimatedDeliveryTime: '3-4 hours'
   },
   {
     id: 5,
     name: 'South Singapore',
-    deliveryFee: 12.99,
-    minimumOrder: 45,
+    deliveryFee: 0,
+    minimumOrder: 0,
     estimatedDeliveryTime: '3-4 hours'
   }
 ];
 
 const mockPostalCodeMap: Record<string, DeliveryAreaResponse> = {
-  // Central Singapore (01-08)
+  // Central Singapore (01-11)
   '01': mockDeliveryAreas[0], // Marina Bay, Raffles Place
   '02': mockDeliveryAreas[0], // Tanjong Pagar, Chinatown
   '03': mockDeliveryAreas[0], // Queenstown, Tiong Bahru
@@ -258,34 +259,50 @@ const mockPostalCodeMap: Record<string, DeliveryAreaResponse> = {
   '06': mockDeliveryAreas[0], // Bukit Timah, Newton
   '07': mockDeliveryAreas[0], // Orchard, Tanglin
   '08': mockDeliveryAreas[0], // Museum, Dhoby Ghaut
+  '09': mockDeliveryAreas[0], // Rochor, Bugis
+  '10': mockDeliveryAreas[0], // Novena, Thomson
+  '11': mockDeliveryAreas[0], // Bishan, Ang Mo Kio
   
-  // North Singapore (09-13)
-  '09': mockDeliveryAreas[1], // Woodlands, Admiralty
-  '10': mockDeliveryAreas[1], // Sembawang, Canberra
-  '11': mockDeliveryAreas[1], // Yishun, Khatib
-  '12': mockDeliveryAreas[1], // Seletar, Punggol
-  '13': mockDeliveryAreas[1], // Ang Mo Kio, Bishan
+  // North Singapore (72-73, 75-82)
+  '72': mockDeliveryAreas[1], // Woodlands, Admiralty
+  '73': mockDeliveryAreas[1], // Sembawang, Canberra
+  '75': mockDeliveryAreas[1], // Yishun, Khatib
+  '76': mockDeliveryAreas[1], // Upper Thomson, Lentor
+  '77': mockDeliveryAreas[1], // Seletar, Punggol
+  '78': mockDeliveryAreas[1], // Punggol East, Coney Island
+  '79': mockDeliveryAreas[1], // Sengkang, Buangkok
+  '80': mockDeliveryAreas[1], // Hougang, Ponggol
+  '81': mockDeliveryAreas[1], // Serangoon, Bartley
+  '82': mockDeliveryAreas[1], // Ang Mo Kio, Bishan
   
-  // East Singapore (14-18)
-  '14': mockDeliveryAreas[2], // Eunos, Geylang
-  '15': mockDeliveryAreas[2], // Katong, Joo Chiat
-  '16': mockDeliveryAreas[2], // Bedok, Upper East Coast
-  '17': mockDeliveryAreas[2], // Changi, Loyang
-  '18': mockDeliveryAreas[2], // Tampines, Pasir Ris
+  // East Singapore (38-42, 50-52)
+  '38': mockDeliveryAreas[2], // Geylang, Kallang
+  '39': mockDeliveryAreas[2], // Eunos, Kembangan
+  '40': mockDeliveryAreas[2], // Katong, Joo Chiat
+  '41': mockDeliveryAreas[2], // Marine Parade, Siglap
+  '42': mockDeliveryAreas[2], // Bedok, Upper East Coast
+  '50': mockDeliveryAreas[2], // Changi, Loyang
+  '51': mockDeliveryAreas[2], // Tampines, Pasir Ris
+  '52': mockDeliveryAreas[2], // Pasir Ris, Punggol
   
-  // West Singapore (19-23)
-  '19': mockDeliveryAreas[3], // Jurong, Tuas
-  '20': mockDeliveryAreas[3], // Bukit Batok, Bukit Gombak
-  '21': mockDeliveryAreas[3], // Choa Chu Kang, Yew Tee
-  '22': mockDeliveryAreas[3], // Kranji, Sungei Kadut
-  '23': mockDeliveryAreas[3], // Tengah, Pioneer
+  // West Singapore (60-71)
+  '60': mockDeliveryAreas[3], // Jurong West, Boon Lay
+  '61': mockDeliveryAreas[3], // Jurong East, Lakeside
+  '62': mockDeliveryAreas[3], // Jurong Central, Pioneer
+  '63': mockDeliveryAreas[3], // Tuas, Joo Koon
+  '64': mockDeliveryAreas[3], // Bukit Batok, Bukit Gombak
+  '65': mockDeliveryAreas[3], // Choa Chu Kang, Yew Tee
+  '66': mockDeliveryAreas[3], // Bukit Panjang, Petir
+  '67': mockDeliveryAreas[3], // Kranji, Sungei Kadut
+  '68': mockDeliveryAreas[3], // Lim Chu Kang, Tengah
+  '69': mockDeliveryAreas[3], // Boon Lay, Pioneer
+  '70': mockDeliveryAreas[3], // Clementi, Dover
+  '71': mockDeliveryAreas[3], // Jurong Island, Tuas
   
-  // South Singapore (24-28)
-  '24': mockDeliveryAreas[4], // Sentosa, Harbourfront
-  '25': mockDeliveryAreas[4], // Keppel, Labrador
-  '26': mockDeliveryAreas[4], // Bukit Merah, Redhill
-  '27': mockDeliveryAreas[4], // Alexandra, Commonwealth
-  '28': mockDeliveryAreas[4]  // Dover, Clementi
+  // South Singapore (14-16)
+  '14': mockDeliveryAreas[4], // Kallang, Sports Hub
+  '15': mockDeliveryAreas[4], // Tanjong Rhu, Mountbatten
+  '16': mockDeliveryAreas[4]  // Buona Vista, HarbourFront
 };
 
 // Helper function to validate postal code format (Singapore format)
@@ -775,6 +792,228 @@ app.post('/shopify/webhook/orders/create', async (req, res) => {
   } catch (err) {
     console.error('Error processing order webhook:', err);
     res.status(500).json({ success: false });
+  }
+});
+
+// Data persistence endpoints
+app.get('/api/data/all', async (req, res) => {
+  try {
+    const allData = await db.exportAllData();
+    res.json({ success: true, data: allData });
+  } catch (error) {
+    console.error('Failed to load all data:', error);
+    res.status(500).json({ success: false, error: 'Failed to load configuration data' });
+  }
+});
+
+// Delivery Areas
+app.get('/api/delivery-areas', async (req, res) => {
+  try {
+    const deliveryAreas = await db.getDeliveryAreas();
+    res.json({ success: true, data: deliveryAreas });
+  } catch (error) {
+    console.error('Failed to load delivery areas:', error);
+    res.status(500).json({ success: false, error: 'Failed to load delivery areas' });
+  }
+});
+
+app.post('/api/delivery-areas', async (req, res) => {
+  try {
+    await db.saveDeliveryAreas(req.body);
+    res.json({ success: true, message: 'Delivery areas saved successfully' });
+  } catch (error) {
+    console.error('Failed to save delivery areas:', error);
+    res.status(500).json({ success: false, error: 'Failed to save delivery areas' });
+  }
+});
+
+// Global Timeslots
+app.get('/api/global-timeslots', async (req, res) => {
+  try {
+    const globalTimeslots = await db.getGlobalTimeslots();
+    res.json({ success: true, data: globalTimeslots });
+  } catch (error) {
+    console.error('Failed to load global timeslots:', error);
+    res.status(500).json({ success: false, error: 'Failed to load global timeslots' });
+  }
+});
+
+app.post('/api/global-timeslots', async (req, res) => {
+  try {
+    await db.saveGlobalTimeslots(req.body);
+    res.json({ success: true, message: 'Global timeslots saved successfully' });
+  } catch (error) {
+    console.error('Failed to save global timeslots:', error);
+    res.status(500).json({ success: false, error: 'Failed to save global timeslots' });
+  }
+});
+
+// Express Timeslots
+app.get('/api/express-timeslots', async (req, res) => {
+  try {
+    const expressTimeslots = await db.getExpressTimeslots();
+    res.json({ success: true, data: { expressTimeslots } });
+  } catch (error) {
+    console.error('Failed to load express timeslots:', error);
+    res.status(500).json({ success: false, error: 'Failed to load express timeslots' });
+  }
+});
+
+app.post('/api/express-timeslots', async (req, res) => {
+  try {
+    await db.saveExpressTimeslots(req.body);
+    res.json({ success: true, message: 'Express timeslots saved successfully' });
+  } catch (error) {
+    console.error('Failed to save express timeslots:', error);
+    res.status(500).json({ success: false, error: 'Failed to save express timeslots' });
+  }
+});
+
+// Express Timeslot Assignments
+app.get('/api/express-timeslot-assignments', async (req, res) => {
+  try {
+    const assignments = await db.getExpressTimeslotAssignments();
+    res.json({ success: true, data: assignments });
+  } catch (error) {
+    console.error('Failed to load express timeslot assignments:', error);
+    res.status(500).json({ success: false, error: 'Failed to load express timeslot assignments' });
+  }
+});
+
+app.post('/api/express-timeslot-assignments', async (req, res) => {
+  try {
+    await db.saveExpressTimeslotAssignments(req.body);
+    res.json({ success: true, message: 'Express timeslot assignments saved successfully' });
+  } catch (error) {
+    console.error('Failed to save express timeslot assignments:', error);
+    res.status(500).json({ success: false, error: 'Failed to save express timeslot assignments' });
+  }
+});
+
+// Day Assignments
+app.get('/api/day-assignments', async (req, res) => {
+  try {
+    const assignments = await db.getDayAssignments();
+    res.json({ success: true, data: assignments });
+  } catch (error) {
+    console.error('Failed to load day assignments:', error);
+    res.status(500).json({ success: false, error: 'Failed to load day assignments' });
+  }
+});
+
+app.post('/api/day-assignments', async (req, res) => {
+  try {
+    await db.saveDayAssignments(req.body);
+    res.json({ success: true, message: 'Day assignments saved successfully' });
+  } catch (error) {
+    console.error('Failed to save day assignments:', error);
+    res.status(500).json({ success: false, error: 'Failed to save day assignments' });
+  }
+});
+
+// Blocked Dates
+app.get('/api/blocked-dates', async (req, res) => {
+  try {
+    const blockedDates = await db.getBlockedDates();
+    res.json({ success: true, data: blockedDates });
+  } catch (error) {
+    console.error('Failed to load blocked dates:', error);
+    res.status(500).json({ success: false, error: 'Failed to load blocked dates' });
+  }
+});
+
+app.post('/api/blocked-dates', async (req, res) => {
+  try {
+    await db.saveBlockedDates(req.body);
+    res.json({ success: true, message: 'Blocked dates saved successfully' });
+  } catch (error) {
+    console.error('Failed to save blocked dates:', error);
+    res.status(500).json({ success: false, error: 'Failed to save blocked dates' });
+  }
+});
+
+// Blocked Timeslots
+app.get('/api/blocked-timeslots', async (req, res) => {
+  try {
+    const blockedTimeslots = await db.getBlockedTimeslots();
+    res.json({ success: true, data: blockedTimeslots });
+  } catch (error) {
+    console.error('Failed to load blocked timeslots:', error);
+    res.status(500).json({ success: false, error: 'Failed to load blocked timeslots' });
+  }
+});
+
+app.post('/api/blocked-timeslots', async (req, res) => {
+  try {
+    await db.saveBlockedTimeslots(req.body);
+    res.json({ success: true, message: 'Blocked timeslots saved successfully' });
+  } catch (error) {
+    console.error('Failed to save blocked timeslots:', error);
+    res.status(500).json({ success: false, error: 'Failed to save blocked timeslots' });
+  }
+});
+
+// Global Advance Order Rules
+app.get('/api/global-advance-rules', async (req, res) => {
+  try {
+    const rules = await db.getGlobalAdvanceOrderRules();
+    res.json({ success: true, data: rules });
+  } catch (error) {
+    console.error('Failed to load global advance rules:', error);
+    res.status(500).json({ success: false, error: 'Failed to load global advance rules' });
+  }
+});
+
+app.post('/api/global-advance-rules', async (req, res) => {
+  try {
+    await db.saveGlobalAdvanceOrderRules(req.body);
+    res.json({ success: true, message: 'Global advance rules saved successfully' });
+  } catch (error) {
+    console.error('Failed to save global advance rules:', error);
+    res.status(500).json({ success: false, error: 'Failed to save global advance rules' });
+  }
+});
+
+// Product Advance Order Rules
+app.get('/api/product-advance-rules', async (req, res) => {
+  try {
+    const rules = await db.getProductAdvanceOrderRules();
+    res.json({ success: true, data: rules });
+  } catch (error) {
+    console.error('Failed to load product advance rules:', error);
+    res.status(500).json({ success: false, error: 'Failed to load product advance rules' });
+  }
+});
+
+app.post('/api/product-advance-rules', async (req, res) => {
+  try {
+    await db.saveProductAdvanceOrderRules(req.body);
+    res.json({ success: true, message: 'Product advance rules saved successfully' });
+  } catch (error) {
+    console.error('Failed to save product advance rules:', error);
+    res.status(500).json({ success: false, error: 'Failed to save product advance rules' });
+  }
+});
+
+// Backup and Restore
+app.post('/api/backup/create', async (req, res) => {
+  try {
+    const backupFile = await db.createBackup();
+    res.json({ success: true, message: 'Backup created successfully', backupFile });
+  } catch (error) {
+    console.error('Failed to create backup:', error);
+    res.status(500).json({ success: false, error: 'Failed to create backup' });
+  }
+});
+
+app.post('/api/backup/restore', async (req, res) => {
+  try {
+    const { backupFile } = req.body;
+    await db.restoreFromBackup(backupFile);
+    res.json({ success: true, message: 'Data restored from backup successfully' });
+  } catch (error) {
+    console.error('Failed to restore from backup:', error);
+    res.status(500).json({ success: false, error: 'Failed to restore from backup' });
   }
 });
 

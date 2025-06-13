@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "Morning Delivery",
+    "startTime": "09:00",
+    "endTime": "12:00",
+    "maxSlots": 10,
+    "deliveryType": "delivery",
+    "cutoffTime": "08:00",
+    "cutoffType": "same-day",
+    "isActive": true,
+    "createdAt": "2025-06-12T14:45:34.821Z"
+  },
+  {
+    "id": 2,
+    "name": "Afternoon Delivery",
+    "startTime": "13:00",
+    "endTime": "17:00",
+    "maxSlots": 8,
+    "deliveryType": "delivery",
+    "cutoffTime": "12:00",
+    "cutoffType": "same-day",
+    "isActive": true,
+    "createdAt": "2025-06-12T14:45:34.822Z"
+  },
+  {
+    "id": 3,
+    "name": "Evening Collection",
+    "startTime": "18:00",
+    "endTime": "20:00",
+    "maxSlots": 5,
+    "deliveryType": "collection",
+    "cutoffTime": "17:00",
+    "cutoffType": "same-day",
+    "isActive": true,
+    "createdAt": "2025-06-12T14:45:34.822Z"
+  }
+]

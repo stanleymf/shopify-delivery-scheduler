@@ -1,21 +1,48 @@
 {
-  "name": "shopify-delivery-scheduler",
-  "version": "1.0.0",
-  "description": "Shopify apps for delivery scheduling and customer tag management",
-  "main": "index.js",
+  "name": "shopify-tag-manager",
+  "version": "2.0.0",
+  "description": "Professional Shopify Customer Tag Manager with Segments API Integration",
+  "type": "module",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd apps/admin-dashboard && pnpm install && pnpm run build",
-    "build:tag-manager": "cd apps/shopify-tag-manager && pnpm install && pnpm run build",
-    "dev:tag-manager": "cd apps/shopify-tag-manager && pnpm dev",
-    "start:tag-manager": "cd apps/shopify-tag-manager && pnpm start"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext ts",
+    "clean": "rm -rf dist"
   },
-  "keywords": ["shopify", "delivery", "scheduler", "tags", "customer-segments"],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.12.1",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
+  "keywords": ["shopify", "customer-segments", "tags", "automation", "graphql"],
+  "author": "Shopify Tag Manager",
+  "license": "MIT",
+  "dependencies": {
+    "@shopify/admin-api-client": "^1.0.1",
+    "@shopify/shopify-api": "^11.1.0",
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "helmet": "^8.0.0",
+    "dotenv": "^16.4.7",
+    "node-cron": "^3.0.3",
+    "graphql": "^16.9.0",
+    "graphql-request": "^7.1.0",
+    "winston": "^3.15.0",
+    "joi": "^17.13.3",
+    "rate-limiter-flexible": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/node-cron": "^3.0.11",
+    "typescript": "^5.7.2",
+    "tsx": "^4.19.2",
+    "vitest": "^2.1.8",
+    "eslint": "^9.16.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

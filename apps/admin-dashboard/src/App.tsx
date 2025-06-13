@@ -74,7 +74,7 @@ function App() {
   const [error, setError] = useState<string>('');
   
   // Data states
-  const [deliveryAreas, setDeliveryAreas] = useState<DeliveryArea[]>([
+  const [deliveryAreas] = useState<DeliveryArea[]>([
     { id: 1, name: 'Central Singapore', deliveryFee: 8.99, minimumOrder: 30, estimatedDeliveryTime: '2-3 hours' },
     { id: 2, name: 'North Singapore', deliveryFee: 10.99, minimumOrder: 35, estimatedDeliveryTime: '3-4 hours' },
     { id: 3, name: 'East Singapore', deliveryFee: 9.99, minimumOrder: 30, estimatedDeliveryTime: '2-3 hours' },
@@ -415,27 +415,6 @@ function App() {
       deliveryFee: area.deliveryFee,
       minimumOrder: area.minimumOrder
     });
-  };
-
-  const cancelEditingArea = () => {
-    setEditingAreaId(null);
-    setEditingAreaData({ deliveryFee: 0, minimumOrder: 0 });
-  };
-
-  const saveAreaChanges = () => {
-    if (editingAreaId === null) return;
-    
-    setDeliveryAreas(areas => 
-      areas.map(area => 
-        area.id === editingAreaId 
-          ? { ...area, deliveryFee: editingAreaData.deliveryFee, minimumOrder: editingAreaData.minimumOrder }
-          : area
-      )
-    );
-    
-    setEditingAreaId(null);
-    setEditingAreaData({ deliveryFee: 0, minimumOrder: 0 });
-    alert('Delivery area updated successfully!');
   };
 
   const tabs = [

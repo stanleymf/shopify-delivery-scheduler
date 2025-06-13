@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "Express Morning",
+    "startTime": "10:00",
+    "endTime": "12:00",
+    "fee": 15,
+    "maxSlots": 3,
+    "isActive": true,
+    "cutoffMinutes": 60,
+    "dayOfWeek": 1,
+    "createdAt": "2025-06-12T14:45:34.822Z"
+  },
+  {
+    "id": 2,
+    "name": "Express Afternoon",
+    "startTime": "14:00",
+    "endTime": "16:00",
+    "fee": 18,
+    "maxSlots": 3,
+    "isActive": true,
+    "cutoffMinutes": 90,
+    "dayOfWeek": 1,
+    "createdAt": "2025-06-12T14:45:34.822Z"
+  },
+  {
+    "id": 3,
+    "name": "Express Friday",
+    "startTime": "15:00",
+    "endTime": "17:00",
+    "fee": 20,
+    "maxSlots": 2,
+    "isActive": true,
+    "cutoffMinutes": 120,
+    "dayOfWeek": 5,
+    "createdAt": "2025-06-12T14:45:34.822Z"
+  }
+]

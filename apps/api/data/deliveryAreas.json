@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "name": "Central Singapore",
+    "deliveryFee": 0,
+    "minimumOrder": 50,
+    "estimatedDeliveryTime": "1-2 business days"
+  },
+  {
+    "id": 2,
+    "name": "North Singapore",
+    "deliveryFee": 0,
+    "minimumOrder": 50,
+    "estimatedDeliveryTime": "1-2 business days"
+  },
+  {
+    "id": 3,
+    "name": "East Singapore",
+    "deliveryFee": 0,
+    "minimumOrder": 50,
+    "estimatedDeliveryTime": "1-2 business days"
+  },
+  {
+    "id": 4,
+    "name": "West Singapore",
+    "deliveryFee": 0,
+    "minimumOrder": 50,
+    "estimatedDeliveryTime": "1-2 business days"
+  },
+  {
+    "id": 5,
+    "name": "South Singapore",
+    "deliveryFee": 0,
+    "minimumOrder": 50,
+    "estimatedDeliveryTime": "1-2 business days"
+  }
+]
